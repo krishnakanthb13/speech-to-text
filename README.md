@@ -53,6 +53,9 @@ Hold the specific combo to record, then release twice to transcribe and type:
 | **General** | `Ctrl + Alt + 1` | Standard speech to clear text | 🔴 Pulsing |
 | **Coding** | `Ctrl + Alt + 2` | Documentation & structured code | 🔴 Pulsing |
 | **Email** | `Ctrl + Alt + 3` | Professional business email body | 🔴 Pulsing |
+| **Meeting** | `Ctrl + Alt + 4` | Summarize speech into action items | 🔴 Pulsing |
+| **Simple** | `Ctrl + Alt + 5` | Convert jargon to plain English | 🔴 Pulsing |
+| **Social** | `Ctrl + Alt + 6` | Catchy posts for LinkedIn/X | 🔴 Pulsing |
 
 ### ⚙️ Settings
 Run **`run_groq_stt.bat`** and select **Option 2** to:

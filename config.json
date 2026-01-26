@@ -30,6 +30,33 @@
                 "3"
             ],
             "prompt": "You are an email assistant. Professionalize this speech into a clear, concise email. Fix grammar and tone. Return ONLY the email body."
+        },
+        {
+            "name": "Meeting",
+            "hotkey": [
+                "ctrl_l",
+                "alt_l",
+                "4"
+            ],
+            "prompt": "Transform this speech into structured meeting minutes. Include key discussion points, decisions made, and a list of action items. Return only the structured notes."
+        },
+        {
+            "name": "Simple",
+            "hotkey": [
+                "ctrl_l",
+                "alt_l",
+                "5"
+            ],
+            "prompt": "Rewrite this speech in plain, simple English. Remove jargon and make it easy for a non-expert to understand. Return only the simplified text."
+        },
+        {
+            "name": "Social",
+            "hotkey": [
+                "ctrl_l",
+                "alt_l",
+                "6"
+            ],
+            "prompt": "Rewrite this into a catchy, engaging social media post. Use a friendly tone and include a few relevant (but not excessive) emojis. Return only the post text."
         }
     ],
     "rate_limit_retries": 3,
