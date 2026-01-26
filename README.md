@@ -1,5 +1,7 @@
 # 🎙️ Handy-Groq STT
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 **Handy-Groq: Press, speak, and watch your thoughts turn into perfectly refined text in any application.**
 
 A high-performance, context-aware AI voice assistant that transcribes and auto-types refined text via global hotkeys. Built with Groq's Whisper-large-v3 for near-instant speed and LLM refinement for professional results.
@@ -64,4 +66,9 @@ Run **`run_groq_stt.bat`** and select **Option 2** to:
 - `run_groq_stt.bat`: ModernUTF-8 launcher menu.
 
 ---
-*Inspired by @[handy-cli-main]. Optimized for high-productivity workflows.*
+
+## 📜 License
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
+
+---
+*Inspired by @krishnakanthb13. Optimized for high-productivity workflows.*
