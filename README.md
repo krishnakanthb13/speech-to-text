@@ -18,7 +18,7 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 - 🧠 **Context-Aware Refinement**: Optional AI layer to fix grammar, punctuation, and "ums/ahs".
 - ⌨️ **Rare Global Hotkeys**: Uses `Ctrl + Alt + Number` combos to avoid app conflicts.
 - 🪄 **Auto-Type & Copy**: Automatically types into active windows (Notepad++, IDEs, Browsers) and copies to clipboard.
-- 🎨 **Minimal Layout**: Bottom-centered transparent floating widget with state-aware colors and vector animations.
+- 🎨 **Premium Visual Widget**: A floating, glassmorphism-inspired pill featuring **vibrant, native emojis** (🎙, 🤖, ✅) and state-aware color cues.
 - 🔊 **Sound Cues**: Integrated audio feedback for start, stop, success, and errors.
 - 📜 **JSON History**: Every entry is logged with metadata in `history.log`.
 - ⚙️ **Settings Manager**: Change models, prompts, and hotkeys via a simple CLI menu.

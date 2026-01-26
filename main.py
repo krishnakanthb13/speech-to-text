@@ -11,6 +11,7 @@ from groq import Groq
 from dotenv import load_dotenv
 from pynput import keyboard
 import scipy.io.wavfile as wavfile
+from PIL import Image, ImageDraw, ImageFont, ImageTk
 try:
     import ctypes
     try:  # Windows 8.1+
@@ -44,52 +45,85 @@ class RecordingIndicator:
         self.state = "idle"
         self.animation_id = None
         self.dot_pulse = 0
+        self.emoji_cache = {}
         if not TK_AVAILABLE:
             print("[INFO] Tkinter not found. Visual indicator disabled.")
 
     def show(self, text="Listening...", state="recording"):
         if not TK_AVAILABLE: return
         if not self.root: self._create_window()
-        self._update_state(state)
+        self._update_state(state, text)
         self.root.deiconify()
         self.visible = True
         self._pulse()
 
-    def _update_state(self, state):
+    def _update_state(self, state, profile_name=None):
         """Centralized state update for UI elements."""
         self.state = state
         if not self.canvas: return
         
-        # Colors: Red (Recording), Yellow (Processing), Green (Completed)
+        # States with Emojis, Text and Colors
         states = {
-            "recording": ("Listening...", "#ff4444"),    # Red
-            "processing": ("Processing...", "#ffbb00"),  # Yellow
-            "typing": ("Done", "#00cc00")                # Green
+            "recording": ("🎙", "Listening", "#ff4444"),
+            "processing": ("🤖", "Processing...", "#ffbb00"),
+            "typing": ("✅", "Done...", "#00cc00")
         }
-        text, color = states.get(state, ("...", "white"))
+        emoji, text, color = states.get(state, ("?", "...", "white"))
         
-        self.canvas.itemconfig(self.text_id, text=text, fill=color)
+        # If recording, include the profile name alongside "Listening"
+        if state == "recording" and profile_name:
+            # Capitalize only the first letter of the profile name for sentence case
+            formatted_profile = profile_name.strip().capitalize()
+            if formatted_profile != "Listening":
+                text = f"Listening ({formatted_profile})"
+            else:
+                text = "Listening..."
+
+        # Render Emoji as Image (Bypasses Tkinter's monochrome text rendering)
+        try:
+            full_text = f"{emoji} {text}"
+            if full_text not in self.emoji_cache:
+                # Create a transparent image for the text + emoji
+                # Use a larger size for better anti-aliasing then scale down
+                img_w, img_h = 600, 100
+                img = Image.new('RGBA', (img_w, img_h), (0, 0, 0, 0))
+                draw = ImageDraw.Draw(img)
+                
+                # Fonts: emoji font for symbols, Segoe UI Bold for text
+                try: 
+                    # Further increased sizes for better visibility
+                    emoji_font = ImageFont.truetype("seguiemj.ttf", 48)
+                    text_font = ImageFont.truetype("seguisb.ttf", 40) # Semi-bold/Bold
+                except: 
+                    emoji_font = text_font = ImageFont.load_default()
+                
+                # Draw Emoji and Text - Shifted LEFT within the image (anchor "lm")
+                # Emoji
+                draw.text((15, img_h//2), emoji, font=emoji_font, fill=color, anchor="lm", embedded_color=True)
+                # Text (shifted right of emoji)
+                draw.text((90, img_h//2), text, font=text_font, fill=color, anchor="lm")
+                
+                # Resize to fit the pill (Balanced for 230px width)
+                img = img.resize((170, 34), Image.Resampling.LANCZOS)
+                self.emoji_cache[full_text] = ImageTk.PhotoImage(img)
+            
+            # Update the existing Label with the new image
+            if hasattr(self, 'label'):
+                self.label.config(image=self.emoji_cache[full_text])
+                self.label.image = self.emoji_cache[full_text] # Keep reference
+        except Exception as e:
+            print(f"[WARN] Emoji rendering failed: {e}")
+            if hasattr(self, 'label'):
+                self.label.config(text=f"{emoji} {text}", fg=color, image='')
+
         self.canvas.itemconfig(self.box_id, outline=color)
 
-        # Handle "Done" Checkmark visibility
-        # Position checkmark where the dot usually is (or slightly adjusted)
-        if state == "typing":
-            self.canvas.itemconfig(self.check_line1, state='normal', fill=color)
-            self.canvas.itemconfig(self.check_line2, state='normal', fill=color)
-            # Center "Done" text? It is already centered.
-        else:
-            self.canvas.itemconfig(self.check_line1, state='hidden')
-            self.canvas.itemconfig(self.check_line2, state='hidden')
-
-        # Stop pulse animation if not recording
-        if state != "recording":
-             self.canvas.itemconfig(self.dot_id, fill=color)
-        
-        # Hide dot during "Done" (replaced by checkmark)
+        # Handle Dot visibility
         if state == "typing":
             self.canvas.itemconfig(self.dot_id, state='hidden')
         else:
             self.canvas.itemconfig(self.dot_id, state='normal')
+            self.canvas.itemconfig(self.dot_id, fill=color)
 
     def hide(self):
         if not TK_AVAILABLE: return
@@ -116,20 +150,19 @@ class RecordingIndicator:
             self.root.configure(bg=transparent_key)
             self.root.attributes("-transparentcolor", transparent_key)
             
-            # Size and position
-            width, height = 160, 40 
+            # Size and position - Tightened to 230px for a more cohesive "pill" look
+            width, height = 230, 44
             screen_width = self.root.winfo_screenwidth()
             screen_height = self.root.winfo_screenheight()
             x = (screen_width // 2) - (width // 2)
             y = screen_height - 120
             self.root.geometry(f"{width}x{height}+{x}+{y}")
             
-            # Canvas
+            # Canvas for the pill background and border
             self.canvas = tk.Canvas(self.root, width=width, height=height, bg=transparent_key, highlightthickness=0)
             self.canvas.pack()
             
-            # 1. Basic Box (Rectangle) - Clean sharp edges
-            # Inset by 2px to ensure 2px border doesn't get clipped
+            # 1. Basic Box (Rectangle)
             self.box_id = self.canvas.create_rectangle(
                 2, 2, width-2, height-2,
                 fill=bg_color,
@@ -137,33 +170,27 @@ class RecordingIndicator:
                 width=2
             )
             
-            # 2. Text Label - Centered
-            self.text_id = self.canvas.create_text(
-                width//2 - 10, height//2, # Slightly left of center to balance the dot on right
-                text="Listening...",
-                fill="white",
-                font=("Segoe UI", 10, "bold")
+            # 2. Status Label - Using an image-based label for rich emojis
+            self.label = tk.Label(
+                self.root,
+                bg=bg_color,
+                borderwidth=0,
+                highlightthickness=0
             )
+            # Positioned with a slightly larger left margin (18px)
+            self.label.place(x=18, rely=0.5, anchor=tk.W)
 
-            # 3. Status Dot - To the RIGHT of text
-            # Width 160. Center 80. Text ends approx 115.
-            # Put dot at 135
+            # 3. Status Dot - Pulsing indicator on the right
+            # Positioned closer to the text area
             self.dot_id = self.canvas.create_oval(
-                130, height//2 - 4, 
-                138, height//2 + 4, 
+                width - 28, height//2 - 4, 
+                width - 20, height//2 + 4, 
                 fill="white", outline=""
             )
             
-            # 4. Vector Checkmark - Same position as dot (Right side)
-            cx, cy = 134, height//2 
-            self.check_line1 = self.canvas.create_line(
-                cx-5, cy+1, cx-1, cy+5, 
-                fill="#00cc00", width=2, capstyle=tk.ROUND, state='hidden'
-            )
-            self.check_line2 = self.canvas.create_line(
-                cx-1, cy+5, cx+6, cy-4, 
-                fill="#00cc00", width=2, capstyle=tk.ROUND, state='hidden'
-            )
+            internal_render_width = 170
+            if 18 + internal_render_width > (width - 28):
+                print("[WARN] UI Layout conflict: Label might overlap dot.")
 
         except Exception as e:
             print(f"[WARN] UI Init Failed: {e}")
@@ -190,7 +217,7 @@ class RecordingIndicator:
     def update_text(self, text, state=None):
         if not TK_AVAILABLE: return
         if state:
-            self._update_state(state)
+            self._update_state(state, text)
 
     def start_loop(self):
         if not TK_AVAILABLE: return

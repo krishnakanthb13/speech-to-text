@@ -20,7 +20,7 @@ The application operates as a background service that listens for specific globa
 
 | Component | Description |
 | :--- | :--- |
-| `RecordingIndicator` | A custom Tkinter-based minimal box widget that floats on top of other windows to show the current state (Listening, Processing, Done). |
+| `RecordingIndicator` | A custom Tkinter-based floating pill. Uses the **Pillow (PIL)** library to render high-fidelity color emojis and bold text as dynamic images, bypassing Tkinter's native rendering limitations. |
 | `GroqSTT` | The main logic controller. Manages state, audio buffers, and coordinates between hardware and API. |
 | `pynput.keyboard` | Monitors global key presses to trigger actions. |
 | `sounddevice` | Captures raw audio from the default microphone. |
@@ -30,10 +30,10 @@ The application operates as a background service that listens for specific globa
 
 1. **Trigger**: User holds a configured Profile hotkey (e.g., `Ctrl+Alt+1`).
 2. **Audio Capture**: `sounddevice` streams audio data into a queue.
-3. **End Trigger**: User releases the hotkey.
+3. **End Trigger**: User releases the hotkey. The UI updates to **🤖 Processing...**.
 4. **Transcription**: The audio buffer is converted to a WAV in memory and sent to Groq's Whisper API.
 5. **Refinement**: The raw transcript is sent to a Groq LLM with a profile-specific prompt for cleaning and formatting.
-6. **Action**: The final text is copied to the clipboard and "pasted" into the active application using a simulated `Ctrl+V`.
+6. **Action**: The final text is copied to the clipboard and "pasted" into the active application. The UI updates to **✅ Done**.
 7. **Logging**: The event is recorded in `history.log`.
 
 ## Dependencies
