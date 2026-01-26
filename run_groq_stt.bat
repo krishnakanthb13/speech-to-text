@@ -1,21 +1,44 @@
 @echo off
 chcp 65001 > nul
-title Groq Speech-to-Text
-cd /d "%~dp0"
+title Handy-Groq STT Launcher
+setlocal enabledelayedexpansion
 
-echo Checking dependencies...
+:: 1. Tool Check
 where python >nul 2>nul
 if %errorlevel% neq 0 (
-    echo Python is not installed or not in PATH.
+    echo [!] ERROR: Python is not installed or not in PATH.
     pause
     exit /b
 )
 
+:: 2. .env Check
 if not exist .env (
-    echo .env file not found! 
+    echo [!] ERROR: .env file not found! 
     echo Please copy .env.example to .env and add your GROQ_API_KEY.
     pause
     exit /b
+)
+
+:: 3. Environment Check
+set "USE_VENV=0"
+python -c "import groq, sounddevice, pynput, numpy, scipy, pyperclip" >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [w] Global packages missing. Using virtual environment...
+    set "USE_VENV=1"
+) else (
+    echo [i] Global packages found.
+)
+
+if "%USE_VENV%"=="1" (
+    if not exist venv (
+        echo [i] Virtual environment not found. Creating one...
+        python -m venv venv
+        call venv\Scripts\activate
+        echo [i] Installing dependencies...
+        pip install -r requirements.txt
+    ) else (
+        call venv\Scripts\activate
+    )
 )
 
 :menu
