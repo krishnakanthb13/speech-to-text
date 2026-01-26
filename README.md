@@ -4,7 +4,7 @@
 
 **Handy-Groq: Press, speak, and watch your thoughts turn into perfectly refined text in any application.**
 
-A high-performance, context-aware AI voice assistant that transcribes and auto-types refined text via global hotkeys. Built with Groq's Whisper-large-v3 for near-instant speed and LLM refinement for professional results.
+A high-performance, context-aware AI voice assistant that transcribes and auto-types refined text via global hotkeys. Now supporting **Windows, Linux, and macOS**. Built with Groq's Whisper-large-v3 for near-instant speed and LLM refinement for professional results.
 
 ---
 
@@ -39,7 +39,11 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 
 ## 🎮 Usage
 
-Launch the app using the one-click launcher: **`run_groq_stt.bat`**.
+### Launching the App
+- **Windows**: Double-click **`run_groq_stt.bat`**.
+- **Linux / macOS**: Run `chmod +x run_groq_stt.sh` and then **`./run_groq_stt.sh`**.
+
+The launcher will automatically check for dependencies, prioritize global packages, or setup a virtual environment if needed.
 
 ### ⌨️ Contextual Profiles
 Hold the specific combo to record, then release twice to transcribe and type:

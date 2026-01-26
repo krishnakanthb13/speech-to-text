@@ -31,4 +31,4 @@ Integration via standard clipboard paste (`Ctrl+V`) ensures compatibility with a
 ## Trade-offs & Constraints
 - **Connectivity**: Requires an active internet connection to communicate with Groq.
 - **System Audio**: Designed for microphone input primarily, not system loopback recording.
-- **Windows Focused**: Currently optimized for the Windows shell and keyboard handling.
+- **Cross-Platform**: Now supporting Windows, Linux, and macOS.

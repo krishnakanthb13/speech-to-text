@@ -8,6 +8,7 @@
 - `history_viewer.py`: A utility script to view the most recent entries in `history.log`.
 - `settings_manager.py`: (Internal/Future) script for managing configuration.
 - `run_groq_stt.bat`: Windows batch file for easy launching and management.
+- `run_groq_stt.sh`: Unix/macOS shell script for cross-platform launching.
 - `requirements.txt`: List of Python dependencies.
 - `.env`: (User provided) Stores the `GROQ_API_KEY`.
 
@@ -39,7 +40,7 @@ The application operates as a background service that listens for specific globa
 
 - `groq`: Official Groq Python SDK.
 - `sounddevice`: For low-latency audio capture.
-- `pynput`: For global hotkey detection and keyboard simulation.
+- **Cross-Platform**: Optimized for Windows, with compatibility for Linux and macOS via a dedicated shell launcher and `pynput` keyboard handling.
 - `numpy` & `scipy`: For handling audio arrays and conversions.
 - `python-dotenv`: To manage API keys securely.
 - `pyperclip`: For clipboard management.
