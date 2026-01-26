@@ -20,14 +20,14 @@ if not exist .env (
 
 :menu
 cls
-echo ==================================================
-echo         🎙️  HANDY-GROQ STT LAUNCHER
-echo ==================================================
-echo     1. START RECORDING
-echo     2. CHANGE SETTINGS
-echo     3. VIEW HISTORY
-echo     0. EXIT
-echo ==================================================
+echo ====================================
+echo     🎙️  Handy-Groq STT Launcher    
+echo ====================================
+echo     1. Start Recording
+echo     2. Change Settings
+echo     3. View History
+echo     0. Exit
+echo ====================================
 set /p choice="Select an option (0-3): "
 
 if "%choice%"=="1" goto start_app

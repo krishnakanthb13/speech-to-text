@@ -36,33 +36,42 @@ load_dotenv()
 class RecordingIndicator:
     def __init__(self):
         self.root = None
-        self.canvas = None
-        self.text_id = None
+        self.status_dot = None
+        self.label = None
         self.visible = False
         self.state = "idle"
-        self.animation_counter = 0
+        self.animation_id = None
+        self.dot_pulse = 0
         if not TK_AVAILABLE:
             print("[INFO] Tkinter not found. Visual indicator disabled.")
 
-    def show(self, text="🎧 Listening", state="recording"):
+    def show(self, text="Listening...", state="recording"):
         if not TK_AVAILABLE: return
         self.state = state
         if not self.root: self._create_window()
         
-        # Update text/icon based on state
-        display_text = text
-        if state == "recording": display_text = "🎧 Listening"
-        elif state == "processing": display_text = "🤖 Processing"
-        elif state == "typing": display_text = "📑 Finished"
+        # Update based on state
+        if self.canvas:
+            if state == "recording":
+                self.canvas.itemconfig(self.text_id, text="Listening...")
+                self.canvas.itemconfig(self.dot_id, fill="white")
+            elif state == "processing":
+                self.canvas.itemconfig(self.text_id, text="Processing...")
+                self.canvas.itemconfig(self.dot_id, fill="#ffdd00")
+            elif state == "typing":
+                self.canvas.itemconfig(self.text_id, text="Done ✓")
+                self.canvas.itemconfig(self.dot_id, fill="#00ff88")
         
-        self.canvas.itemconfig(self.text_id, text=display_text)
         self.root.deiconify()
         self.visible = True
-        self._animate()
+        self._pulse()
 
     def hide(self):
         if not TK_AVAILABLE: return
         self.state = "idle"
+        if self.animation_id:
+            self.root.after_cancel(self.animation_id)
+            self.animation_id = None
         if self.root: self.root.withdraw()
         self.visible = False
 
@@ -74,88 +83,74 @@ class RecordingIndicator:
             self.root.overrideredirect(True)
             self.root.attributes("-topmost", True)
             self.root.attributes("-alpha", 0.95)
-            self.root.attributes("-toolwindow", True)
             
-            # Make the window background transparent
-            transparent_color = "#000001"
-            self.root.configure(bg=transparent_color)
-            self.root.attributes("-transparentcolor", transparent_color)
+            # Transparent background key
+            transparent = "#010101"
+            self.root.configure(bg=transparent)
+            self.root.attributes("-transparentcolor", transparent)
             
-            # Compact Pill Size
-            width, height = 220, 50
+            # Size and position
+            width, height = 170, 42
             screen_width = self.root.winfo_screenwidth()
             screen_height = self.root.winfo_screenheight()
             x = (screen_width // 2) - (width // 2)
-            y = screen_height - 100
+            y = screen_height - 85
             self.root.geometry(f"{width}x{height}+{x}+{y}")
             
-            # Canvas for drawing the pill
-            self.canvas = tk.Canvas(self.root, width=width, height=height, bg=transparent_color, highlightthickness=0)
+            # Canvas for rounded pill
+            self.canvas = tk.Canvas(self.root, width=width, height=height, bg=transparent, highlightthickness=0)
             self.canvas.pack()
             
-            # Draw Pill Shape (Rounded Rectangle)
-            self._draw_pill(0, 0, width, height, radius=25, color="#1e1e1e")
+            # Apple-style blue/teal color
+            pill_color = "#0A84FF"  # Apple Blue
+            # pill_color = "#30D158"  # Apple Green (alternative)
             
-            # Text Element
+            # Draw rounded pill
+            r = 21  # radius for full round ends
+            self.canvas.create_arc(0, 0, r*2, height, start=90, extent=180, fill=pill_color, outline=pill_color)
+            self.canvas.create_arc(width-r*2, 0, width, height, start=270, extent=180, fill=pill_color, outline=pill_color)
+            self.canvas.create_rectangle(r, 0, width-r, height, fill=pill_color, outline=pill_color)
+            
+            # Status dot (white circle that changes)
+            self.dot_id = self.canvas.create_oval(18, 15, 30, 27, fill="white", outline="")
+            
+            # Text label
             self.text_id = self.canvas.create_text(
-                width//2 + 10, height//2, 
-                text="🎧 Listening", 
-                fill="white", 
-                font=("Segoe UI", 12, "bold")
+                width//2 + 8, height//2,
+                text="Listening...",
+                fill="white",
+                font=("Segoe UI", 10, "bold")
             )
 
         except Exception as e:
             print(f"[WARN] UI Init Failed: {e}")
             TK_AVAILABLE = False
 
-    def _draw_pill(self, x1, y1, x2, y2, radius, color):
-        points = [x1+radius, y1, x1+radius, y1, x2-radius, y1, x2-radius, y1, x2, y1, x2, y1+radius, x2, y1+radius, x2, y2-radius, x2, y2-radius, x2, y2, x2-radius, y2, x2-radius, y2, x1+radius, y2, x1+radius, y2, x1, y2, x1, y2-radius, x1, y2-radius, x1, y1+radius, x1, y1+radius, x1, y1]
-        return self.canvas.create_polygon(points, smooth=True, fill=color, outline="#333333", width=1)
-
-    def _animate(self):
-        if not self.visible or self.state == "idle": return
-        self.animation_counter += 1
-        self.canvas.delete("anim") # Clear previous animation frame
-        
-        cx, cy = 25, 25 # Icon/Anim position (Left side)
-        
-        if self.state == "recording":
-            # Red Pulse
-            pulse = (math.sin(self.animation_counter * 0.2) + 1) * 3
-            self.canvas.create_oval(cx-4-pulse, cy-4-pulse, cx+4+pulse, cy+4+pulse, outline="#ff4b2b", width=2, tags="anim")
-            self.canvas.create_oval(cx-5, cy-5, cx+5, cy+5, fill="#ff4b2b", outline="", tags="anim")
-            
-        elif self.state == "processing":
-            # Orange Spinner
-            angle = (self.animation_counter * 0.3) % (2 * math.pi)
-            r = 8
-            self.canvas.create_oval(cx-r, cy-r, cx+r, cy+r, outline="#444", width=2, tags="anim")
-            sx = cx + r * math.cos(angle)
-            sy = cy + r * math.sin(angle)
-            self.canvas.create_oval(sx-3, sy-3, sx+3, sy+3, fill="#ffa500", outline="", tags="anim")
-
-        elif self.state == "typing":
-            # Green Check
-            self.canvas.create_text(cx, cy, text="✓", fill="#4caf50", font=("Arial", 16, "bold"), tags="anim")
-
-        self.root.after(40, self._animate)
+    def _pulse(self):
+        if not self.visible or self.state != "recording": return
+        self.dot_pulse = (self.dot_pulse + 1) % 2
+        color = "white" if self.dot_pulse == 0 else "#ccddff"
+        if self.canvas and self.dot_id:
+            self.canvas.itemconfig(self.dot_id, fill=color)
+        self.animation_id = self.root.after(400, self._pulse)
 
     def update_text(self, text, state=None):
         if not TK_AVAILABLE: return
-        # Map old text calls to new state logic if needed, or just use state
-        if state: self.state = state
-        
-        display_text = text
-        if self.state == "recording": display_text = "🎧 Listening"
-        elif self.state == "processing": display_text = "🤖 Processing"
-        elif self.state == "typing": display_text = "📑 Finished"
-        
-        if self.canvas and self.text_id:
-            self.canvas.itemconfig(self.text_id, text=display_text)
+        if state: 
+            self.state = state
+            if self.canvas:
+                if state == "recording":
+                    self.canvas.itemconfig(self.text_id, text="Listening...")
+                    self.canvas.itemconfig(self.dot_id, fill="white")
+                elif state == "processing":
+                    self.canvas.itemconfig(self.text_id, text="Processing...")
+                    self.canvas.itemconfig(self.dot_id, fill="#ffdd00")
+                elif state == "typing":
+                    self.canvas.itemconfig(self.text_id, text="Done ✓")
+                    self.canvas.itemconfig(self.dot_id, fill="#00ff88")
 
     def start_loop(self):
-        if not TK_AVAILABLE:
-            return
+        if not TK_AVAILABLE: return
         self._create_window()
         if self.root:
             self.root.withdraw()
@@ -320,12 +315,17 @@ class GroqSTT:
     def perform_action(self, text, raw_text):
         if not text: return
         mode = self.config.get('action_mode', 'type')
-        if mode in ["copy", "type_and_copy"]: pyperclip.copy(text)
+        
+        # Always copy to clipboard first
+        pyperclip.copy(text)
+        
         if mode in ["type", "type_and_copy"]:
-            self.indicator.update_text("TYPING...", "typing")
-            # Safety delay to ensure physically held keys are released by the OS
-            time.sleep(0.2)
-            self.keyboard_controller.type(text)
+            self.indicator.update_text("Done", "typing")
+            # Safety delay to ensure physically held keys are released
+            time.sleep(0.3)
+            # Use Ctrl+V to paste (instant, atomic output)
+            with self.keyboard_controller.pressed(keyboard.Key.ctrl):
+                self.keyboard_controller.tap('v')
         
         self.log_to_file(raw_text, text)
         self.play_sound("success")
@@ -422,7 +422,10 @@ class GroqSTT:
             print(f" \"{raw_text}\" -> ", end="", flush=True)
             refined_text = self.refine_text(raw_text)
             print(f"Done.")
+            
+            # Atomic Action: Only modify clipboard/type once with the final result
             self.perform_action(refined_text, raw_text)
+            
         time.sleep(1.0) # Show success state for a moment
         self.indicator.hide()
         self.active_profile = None

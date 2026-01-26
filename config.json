@@ -11,7 +11,7 @@
                 "alt_l",
                 "1"
             ],
-            "prompt": "Fix any obvious errors, punctuation, and grammar while keeping the original meaning and tone. Return ONLY the refined text."
+            "prompt": "Clean up this transcript. Fix spelling, grammar, and punctuation. Do not add or change meaning. Return only the cleaned text."
         },
         {
             "name": "Coding",
