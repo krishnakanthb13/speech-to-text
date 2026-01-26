@@ -1,0 +1,9 @@
+groq
+sounddevice
+pynput
+numpy
+scipy
+python-dotenv
+keyboard
+pyinstaller
+pyperclip

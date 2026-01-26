@@ -1,0 +1,40 @@
+{
+    "stt_model": "whisper-large-v3",
+    "refinement_model": "llama-3.3-70b-versatile",
+    "refinement_enabled": true,
+    "debug_keys": false,
+    "profiles": [
+        {
+            "name": "General",
+            "hotkey": [
+                "ctrl_l",
+                "alt_l",
+                "1"
+            ],
+            "prompt": "Fix any obvious errors, punctuation, and grammar while keeping the original meaning and tone. Return ONLY the refined text."
+        },
+        {
+            "name": "Coding",
+            "hotkey": [
+                "ctrl_l",
+                "alt_l",
+                "2"
+            ],
+            "prompt": "You are a coding assistant. Clean up this speech into technical documentation or code. Fix technical terminology. Return ONLY the content."
+        },
+        {
+            "name": "Email",
+            "hotkey": [
+                "ctrl_l",
+                "alt_l",
+                "3"
+            ],
+            "prompt": "You are an email assistant. Professionalize this speech into a clear, concise email. Fix grammar and tone. Return ONLY the email body."
+        }
+    ],
+    "rate_limit_retries": 3,
+    "rate_limit_wait_seconds": 2,
+    "play_sounds": true,
+    "action_mode": "type_and_copy",
+    "log_history": true
+}
