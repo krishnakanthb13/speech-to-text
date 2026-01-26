@@ -20,7 +20,7 @@ The application operates as a background service that listens for specific globa
 
 | Component | Description |
 | :--- | :--- |
-| `RecordingIndicator` | A custom Tkinter-based "pill" widget that floats on top of other windows to show the current state (Listening, Processing, Done). |
+| `RecordingIndicator` | A custom Tkinter-based minimal box widget that floats on top of other windows to show the current state (Listening, Processing, Done). |
 | `GroqSTT` | The main logic controller. Manages state, audio buffers, and coordinates between hardware and API. |
 | `pynput.keyboard` | Monitors global key presses to trigger actions. |
 | `sounddevice` | Captures raw audio from the default microphone. |

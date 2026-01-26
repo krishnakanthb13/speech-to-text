@@ -2,9 +2,13 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
+![Handy-Groq STT](./assets/release_v0.0.10.png)
+
 **Handy-Groq: Press, speak, and watch your thoughts turn into perfectly refined text in any application.**
 
 A high-performance, context-aware AI voice assistant that transcribes and auto-types refined text via global hotkeys. Now supporting **Windows, Linux, and macOS**. Built with Groq's Whisper-large-v3 for near-instant speed and LLM refinement for professional results.
+
+![Handy-Groq-STT](./assets/Handy-Groq-SST.gif)
 
 ---
 
@@ -14,7 +18,7 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 - 🧠 **Context-Aware Refinement**: Optional AI layer to fix grammar, punctuation, and "ums/ahs".
 - ⌨️ **Rare Global Hotkeys**: Uses `Ctrl + Alt + Number` combos to avoid app conflicts.
 - 🪄 **Auto-Type & Copy**: Automatically types into active windows (Notepad++, IDEs, Browsers) and copies to clipboard.
-- 🎨 **Premium UI Widget**: Bottom-centered floating widget with state-aware animations (Pulsing/Spinner/Checkmark).
+- 🎨 **Minimal Layout**: Bottom-centered transparent floating widget with state-aware colors and vector animations.
 - 🔊 **Sound Cues**: Integrated audio feedback for start, stop, success, and errors.
 - 📜 **JSON History**: Every entry is logged with metadata in `history.log`.
 - ⚙️ **Settings Manager**: Change models, prompts, and hotkeys via a simple CLI menu.
@@ -48,14 +52,14 @@ The launcher will automatically check for dependencies, prioritize global packag
 ### ⌨️ Contextual Profiles
 Hold the specific combo to record, then release twice to transcribe and type:
 
-| Profile | Hotkey | Purpose | UI Color |
-| :--- | :--- | :--- | :--- |
-| **General** | `Ctrl + Alt + 1` | Standard speech to clear text | 🔴 Pulsing |
-| **Coding** | `Ctrl + Alt + 2` | Documentation & structured code | 🔴 Pulsing |
-| **Email** | `Ctrl + Alt + 3` | Professional business email body | 🔴 Pulsing |
-| **Meeting** | `Ctrl + Alt + 4` | Summarize speech into action items | 🔴 Pulsing |
-| **Simple** | `Ctrl + Alt + 5` | Convert jargon to plain English | 🔴 Pulsing |
-| **Social** | `Ctrl + Alt + 6` | Catchy posts for LinkedIn/X | 🔴 Pulsing |
+| Profile | Hotkey | Purpose |
+| :--- | :--- | :--- |
+| **General** | `Ctrl + Alt + 1` | Standard speech to clear text |
+| **Coding** | `Ctrl + Alt + 2` | Documentation & structured code |
+| **Email** | `Ctrl + Alt + 3` | Professional business email body |
+| **Meeting** | `Ctrl + Alt + 4` | Summarize speech into action items |
+| **Simple** | `Ctrl + Alt + 5` | Convert jargon to plain English |
+| **Social** | `Ctrl + Alt + 6` | Catchy posts for LinkedIn/X |
 
 ### ⚙️ Settings
 Run **`run_groq_stt.bat`** and select **Option 2** to:

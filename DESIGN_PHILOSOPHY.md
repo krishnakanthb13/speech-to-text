@@ -15,7 +15,7 @@ The tool should feel like a native extension of the keyboard. You press a key, y
 Transcription needs vary. Coding requires technical precision, while emails require professional tone. The profile system allows the user to switch "modes" instantly without changing settings.
 
 ### 3. Visual Elegance
-The status indicator is designed to be world-class. It follows a minimalist "pill" design with Apple-inspired aesthetics, providing just enough feedback without cluttering the screen.
+The status indicator is designed to be world-class. It follows a minimalist transparent box design, prioritizing high-DPI sharpness and clear text legibility, providing just enough feedback without cluttering the screen.
 
 ### 4. Performance First
 By leveraging `sounddevice` for low-latency capture and `Groq` for ultra-fast inference, we ensure the user is never waiting for the tool to "catch up."
