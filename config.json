@@ -11,7 +11,7 @@
                 "alt_l",
                 "1"
             ],
-            "prompt": "Clean up this transcript. Fix spelling, grammar, and punctuation. Do not add or change meaning. Return only the cleaned text."
+            "prompt": "You are a transcription assistant. You need to clean up this transcript. Fix spelling, grammar, and punctuation. Do not reply or add or change meaning. Return only the cleaned text."
         },
         {
             "name": "Coding",

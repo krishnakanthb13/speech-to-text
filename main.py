@@ -14,7 +14,8 @@ import scipy.io.wavfile as wavfile
 try:
     import ctypes
     try:  # Windows 8.1+
-        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        # PROCESS_PER_MONITOR_DPI_AWARE = 2
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
     except AttributeError:  # Windows Vista/7
         ctypes.windll.user32.SetProcessDPIAware()
 except Exception:
@@ -59,14 +60,36 @@ class RecordingIndicator:
         self.state = state
         if not self.canvas: return
         
+        # Colors: Red (Recording), Yellow (Processing), Green (Completed)
         states = {
-            "recording": ("Listening...", "white"),
-            "processing": ("Processing...", "#ffdd00"),
-            "typing": ("Done ✓", "#00ff88")
+            "recording": ("Listening...", "#ff4444"),    # Red
+            "processing": ("Processing...", "#ffbb00"),  # Yellow
+            "typing": ("Done", "#00cc00")                # Green
         }
         text, color = states.get(state, ("...", "white"))
-        self.canvas.itemconfig(self.text_id, text=text)
-        self.canvas.itemconfig(self.dot_id, fill=color)
+        
+        self.canvas.itemconfig(self.text_id, text=text, fill=color)
+        self.canvas.itemconfig(self.box_id, outline=color)
+
+        # Handle "Done" Checkmark visibility
+        # Position checkmark where the dot usually is (or slightly adjusted)
+        if state == "typing":
+            self.canvas.itemconfig(self.check_line1, state='normal', fill=color)
+            self.canvas.itemconfig(self.check_line2, state='normal', fill=color)
+            # Center "Done" text? It is already centered.
+        else:
+            self.canvas.itemconfig(self.check_line1, state='hidden')
+            self.canvas.itemconfig(self.check_line2, state='hidden')
+
+        # Stop pulse animation if not recording
+        if state != "recording":
+             self.canvas.itemconfig(self.dot_id, fill=color)
+        
+        # Hide dot during "Done" (replaced by checkmark)
+        if state == "typing":
+            self.canvas.itemconfig(self.dot_id, state='hidden')
+        else:
+            self.canvas.itemconfig(self.dot_id, state='normal')
 
     def hide(self):
         if not TK_AVAILABLE: return
@@ -84,44 +107,62 @@ class RecordingIndicator:
             self.root = tk.Tk()
             self.root.overrideredirect(True)
             self.root.attributes("-topmost", True)
-            self.root.attributes("-alpha", 0.95)
+            self.root.attributes("-alpha", 0.90)
             
             # Transparent background key
-            transparent = "#010101"
-            self.root.configure(bg=transparent)
-            self.root.attributes("-transparentcolor", transparent)
+            bg_color = "#1e1e1e" # Dark background
+            transparent_key = "#000001"
+            
+            self.root.configure(bg=transparent_key)
+            self.root.attributes("-transparentcolor", transparent_key)
             
             # Size and position
-            width, height = 170, 42
+            width, height = 160, 40 
             screen_width = self.root.winfo_screenwidth()
             screen_height = self.root.winfo_screenheight()
             x = (screen_width // 2) - (width // 2)
-            y = screen_height - 85
+            y = screen_height - 120
             self.root.geometry(f"{width}x{height}+{x}+{y}")
             
-            # Canvas for rounded pill
-            self.canvas = tk.Canvas(self.root, width=width, height=height, bg=transparent, highlightthickness=0)
+            # Canvas
+            self.canvas = tk.Canvas(self.root, width=width, height=height, bg=transparent_key, highlightthickness=0)
             self.canvas.pack()
             
-            # Apple-style blue/teal color
-            pill_color = "#0A84FF"  # Apple Blue
-            # pill_color = "#30D158"  # Apple Green (alternative)
+            # 1. Basic Box (Rectangle) - Clean sharp edges
+            # Inset by 2px to ensure 2px border doesn't get clipped
+            self.box_id = self.canvas.create_rectangle(
+                2, 2, width-2, height-2,
+                fill=bg_color,
+                outline="white",
+                width=2
+            )
             
-            # Draw rounded pill
-            r = 21  # radius for full round ends
-            self.canvas.create_arc(0, 0, r*2, height, start=90, extent=180, fill=pill_color, outline=pill_color)
-            self.canvas.create_arc(width-r*2, 0, width, height, start=270, extent=180, fill=pill_color, outline=pill_color)
-            self.canvas.create_rectangle(r, 0, width-r, height, fill=pill_color, outline=pill_color)
-            
-            # Status dot (white circle that changes)
-            self.dot_id = self.canvas.create_oval(18, 15, 30, 27, fill="white", outline="")
-            
-            # Text label
+            # 2. Text Label - Centered
             self.text_id = self.canvas.create_text(
-                width//2 + 8, height//2,
+                width//2 - 10, height//2, # Slightly left of center to balance the dot on right
                 text="Listening...",
                 fill="white",
                 font=("Segoe UI", 10, "bold")
+            )
+
+            # 3. Status Dot - To the RIGHT of text
+            # Width 160. Center 80. Text ends approx 115.
+            # Put dot at 135
+            self.dot_id = self.canvas.create_oval(
+                130, height//2 - 4, 
+                138, height//2 + 4, 
+                fill="white", outline=""
+            )
+            
+            # 4. Vector Checkmark - Same position as dot (Right side)
+            cx, cy = 134, height//2 
+            self.check_line1 = self.canvas.create_line(
+                cx-5, cy+1, cx-1, cy+5, 
+                fill="#00cc00", width=2, capstyle=tk.ROUND, state='hidden'
+            )
+            self.check_line2 = self.canvas.create_line(
+                cx-1, cy+5, cx+6, cy-4, 
+                fill="#00cc00", width=2, capstyle=tk.ROUND, state='hidden'
             )
 
         except Exception as e:
@@ -131,10 +172,20 @@ class RecordingIndicator:
     def _pulse(self):
         if not self.visible or self.state != "recording": return
         self.dot_pulse = (self.dot_pulse + 1) % 2
-        color = "white" if self.dot_pulse == 0 else "#ccddff"
+        
+        # Pulse the dot opacity or color
+        # Since we use the border/text for main color, let's just pulse the dot between red and white
+        # But wait, _update_state sets the color.
+        # Let's pulse the Dot for "Recording" specifically.
+        
+        base_color = "#ff4444" # Red
+        # Toggle between base color and a lighter/white shade
+        pulse_color = "white" if self.dot_pulse == 0 else base_color
+        
         if self.canvas and self.dot_id:
-            self.canvas.itemconfig(self.dot_id, fill=color)
-        self.animation_id = self.root.after(400, self._pulse)
+             self.canvas.itemconfig(self.dot_id, fill=pulse_color)
+             
+        self.animation_id = self.root.after(500, self._pulse)
 
     def update_text(self, text, state=None):
         if not TK_AVAILABLE: return
