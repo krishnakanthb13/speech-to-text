@@ -39,3 +39,7 @@ temp_recording.wav
 # OS
 .DS_Store
 Thumbs.db
+
+# Release Notes
+release_notes.md
+social_media.md
