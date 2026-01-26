@@ -1,8 +1,8 @@
 import os
+import sys
 import time
 import queue
 import threading
-import wave
 import json
 import math
 import numpy as np
@@ -13,11 +13,12 @@ from pynput import keyboard
 import scipy.io.wavfile as wavfile
 try:
     import ctypes
-    try: # Windows 8.1+
+    try:  # Windows 8.1+
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
-    except: # Windows Vista/7
+    except AttributeError:  # Windows Vista/7
         ctypes.windll.user32.SetProcessDPIAware()
-except: pass
+except Exception:
+    pass  # DPI awareness is not critical
 
 try:
     import tkinter as tk
@@ -47,24 +48,25 @@ class RecordingIndicator:
 
     def show(self, text="Listening...", state="recording"):
         if not TK_AVAILABLE: return
-        self.state = state
         if not self.root: self._create_window()
-        
-        # Update based on state
-        if self.canvas:
-            if state == "recording":
-                self.canvas.itemconfig(self.text_id, text="Listening...")
-                self.canvas.itemconfig(self.dot_id, fill="white")
-            elif state == "processing":
-                self.canvas.itemconfig(self.text_id, text="Processing...")
-                self.canvas.itemconfig(self.dot_id, fill="#ffdd00")
-            elif state == "typing":
-                self.canvas.itemconfig(self.text_id, text="Done ✓")
-                self.canvas.itemconfig(self.dot_id, fill="#00ff88")
-        
+        self._update_state(state)
         self.root.deiconify()
         self.visible = True
         self._pulse()
+
+    def _update_state(self, state):
+        """Centralized state update for UI elements."""
+        self.state = state
+        if not self.canvas: return
+        
+        states = {
+            "recording": ("Listening...", "white"),
+            "processing": ("Processing...", "#ffdd00"),
+            "typing": ("Done ✓", "#00ff88")
+        }
+        text, color = states.get(state, ("...", "white"))
+        self.canvas.itemconfig(self.text_id, text=text)
+        self.canvas.itemconfig(self.dot_id, fill=color)
 
     def hide(self):
         if not TK_AVAILABLE: return
@@ -136,18 +138,8 @@ class RecordingIndicator:
 
     def update_text(self, text, state=None):
         if not TK_AVAILABLE: return
-        if state: 
-            self.state = state
-            if self.canvas:
-                if state == "recording":
-                    self.canvas.itemconfig(self.text_id, text="Listening...")
-                    self.canvas.itemconfig(self.dot_id, fill="white")
-                elif state == "processing":
-                    self.canvas.itemconfig(self.text_id, text="Processing...")
-                    self.canvas.itemconfig(self.dot_id, fill="#ffdd00")
-                elif state == "typing":
-                    self.canvas.itemconfig(self.text_id, text="Done ✓")
-                    self.canvas.itemconfig(self.dot_id, fill="#00ff88")
+        if state:
+            self._update_state(state)
 
     def start_loop(self):
         if not TK_AVAILABLE: return
@@ -216,7 +208,8 @@ class GroqSTT:
             elif sound_type == "stop": winsound.Beep(450, 80)
             elif sound_type == "success": winsound.Beep(900, 120)
             elif sound_type == "error": winsound.Beep(200, 400)
-        except: pass
+        except Exception:
+            pass  # Sound is not critical
 
     def check_microphone(self):
         try:
@@ -371,7 +364,7 @@ class GroqSTT:
                 '<104>': '8', '<105>': '9'
             }
             return numpad_map.get(s, s)
-        except:
+        except Exception:
             return str(key).lower()
 
     def on_press(self, key):
@@ -389,7 +382,7 @@ class GroqSTT:
             self.indicator.hide()
             if self.recording:
                 self.stop_recording()
-            os._exit(0)
+            sys.exit(0)
 
         if not self.recording:
             for profile in self.config['profiles']:
