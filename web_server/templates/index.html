@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +11,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
     <div class="app-container">
         <header>
             <h1><i class="fa-solid fa-microphone-lines"></i> Handy Groq</h1>
-            <button id="settings-btn" class="icon-btn" title="Settings"><i class="fa-solid fa-gear"></i></button>
+            <div class="header-controls">
+                <button id="history-btn" class="icon-btn" title="History"><i
+                        class="fa-solid fa-clock-rotate-left"></i></button>
+                <button id="settings-btn" class="icon-btn" title="Settings"><i class="fa-solid fa-gear"></i></button>
+            </div>
         </header>
 
         <main>
@@ -35,21 +41,29 @@
                     <div class="status-text" id="status-text">Ready to Record</div>
                 </div>
             </div>
+        </main>
 
-            <div class="history-section">
-                <h2>History</h2>
-                <div id="history-list" class="history-list">
-                    <!-- History items -->
+        <!-- History Modal -->
+        <div id="history-modal" class="modal hidden">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h2>History</h2>
+                    <button class="close-modal close-history"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body history-body">
+                    <div id="history-list" class="history-list">
+                        <!-- History items -->
+                    </div>
                 </div>
             </div>
-        </main>
+        </div>
 
         <!-- Settings Modal -->
         <div id="settings-modal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>Settings</h2>
-                    <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="close-modal close-settings"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="modal-body">
                     <div class="setting-group">
@@ -77,8 +91,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <script src="/static/js/main.js"></script>
+        <script src="/static/js/main.js"></script>
 </body>
+
 </html>

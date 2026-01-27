@@ -5,11 +5,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileSelect = document.getElementById('profile-select');
     const promptDisplay = document.getElementById('prompt-display');
     const historyList = document.getElementById('history-list');
+
+    // Modals
     const settingsBtn = document.getElementById('settings-btn');
     const settingsModal = document.getElementById('settings-modal');
-    const closeModalBtn = document.querySelector('.close-modal');
+    const closeSettingsBtn = document.querySelector('.close-settings');
     const saveSettingsBtn = document.getElementById('save-settings');
-    
+
+    const historyBtn = document.getElementById('history-btn');
+    const historyModal = document.getElementById('history-modal');
+    const closeHistoryBtn = document.querySelector('.close-history');
+
     // State
     let isRecording = false;
     let mediaRecorder = null;
@@ -41,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             opt.textContent = p.name + ` (${p.hotkey ? p.hotkey.join('+') : ''})`;
             profileSelect.appendChild(opt);
         });
-        
+
         // Trigger generic selection
         if (config.profiles.length > 0) {
             updatePromptPreview(config.profiles[0].name);
@@ -59,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Settings Handling
     function populateSettings() {
+        if (!config) return;
         document.getElementById('stt-model-select').value = config.stt_model;
         document.getElementById('refinement-model-select').value = config.refinement_model;
         document.getElementById('refinement-toggle').checked = config.refinement_enabled;
@@ -72,21 +79,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await fetch('/api/config', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newConfig)
         });
-        
+
         config = newConfig;
-        toggleModal(false);
+        toggleModal(settingsModal, false);
     });
 
-    settingsBtn.addEventListener('click', () => toggleModal(true));
-    closeModalBtn.addEventListener('click', () => toggleModal(false));
-    
-    function toggleModal(show) {
-        if (show) settingsModal.classList.remove('hidden');
-        else settingsModal.classList.add('hidden');
+    // Modal Generic Logic
+    function toggleModal(modal, show) {
+        if (show) modal.classList.remove('hidden');
+        else modal.classList.add('hidden');
     }
+
+    settingsBtn.addEventListener('click', () => toggleModal(settingsModal, true));
+    closeSettingsBtn.addEventListener('click', () => toggleModal(settingsModal, false));
+
+    historyBtn.addEventListener('click', () => toggleModal(historyModal, true));
+    closeHistoryBtn.addEventListener('click', () => toggleModal(historyModal, false));
+
+    // Close on outside click
+    window.addEventListener('click', (e) => {
+        if (e.target === settingsModal) toggleModal(settingsModal, false);
+        if (e.target === historyModal) toggleModal(historyModal, false);
+    });
 
     // 4. Recording Logic
     micBtn.addEventListener('click', async () => {
@@ -110,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mediaRecorder.addEventListener('stop', async () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 processAudio(audioBlob);
-                
+
                 // Stop all tracks
                 stream.getTracks().forEach(track => track.stop());
             });
@@ -147,11 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: formData
             });
             const data = await res.json();
-            
+
             if (data.status === 'success') {
                 statusText.textContent = "Done!";
                 setTimeout(() => statusText.textContent = "Ready to Record", 2000);
                 addHistoryItem(data.entry, true); // Add to top
+
+                // Auto-open history on success if desired, or just let user browse
+                // toggleModal(historyModal, true); 
             } else {
                 statusText.textContent = "Error";
                 alert("Error: " + data.error);
@@ -182,7 +202,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${item.refined_text}
                 <div class="history-raw">Raw: ${item.raw_text}</div>
             </div>
+            <button class="copy-btn" title="Copy Text"><i class="fa-regular fa-copy"></i></button>
         `;
+
+        // Copy Logic
+        const copyBtn = div.querySelector('.copy-btn');
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = item.refined_text || item.raw_text;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalIcon = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                copyBtn.style.color = '#00ff00';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                    copyBtn.style.color = '';
+                }, 1500);
+            });
+        });
+
         if (prepend) historyList.prepend(div);
         else historyList.appendChild(div);
     }
