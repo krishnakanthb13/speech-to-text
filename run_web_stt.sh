@@ -43,8 +43,6 @@ echo "==========================================="
 echo "      🎙️  Handy-Groq Web Interface"
 echo "==========================================="
 echo "  Open your browser to: http://localhost:8091"
-echo "  IMPORTANT: You will see a 'Not Secure' warning."
-echo "  Click 'Advanced' -> 'Proceed to localhost (unsafe)'"
 echo "==========================================="
 
 cd web_server

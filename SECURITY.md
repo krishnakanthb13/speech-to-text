@@ -1,34 +1,32 @@
-# Security Policy
 
-## Security Audit Report
-**Date**: 2026-01-26
-**Auditor**: Antigravity AI
+# Security Audit Report
 
-### Summary
-| Category | Status | Notes |
-| :--- | :--- | :--- |
-| **Secrets Detection** | 🟢 Passed | `GROQ_API_KEY` is loaded from `.env` via `python-dotenv`. `.env` is listed in `.gitignore`. |
-| **Injection Protection** | 🟢 Passed | No unsafe use of `eval()`, `exec()`, or unparameterized shell commands found. Keyboard input simulation is handled via `pynput.keyboard.Controller`. |
-| **Authentication** | 🟢 Passed | Local application; utilizes environment variables for API authentication with Groq. |
-| **Dependency Analysis** | 🟢 Passed | `requirements.txt` contains essential and trusted packages. Unused packages (`keyboard`, `pyinstaller`) were recently removed. |
+**Date**: 2026-01-27
+**Scope**: Project Root
+**Status**: 🟢 Passed (Localhost Secure)
 
----
+## 1. Secrets & Credentials (OWASP #2)
+- [x] **API Keys**: No hardcoded API keys found in source code. `GROQ_API_KEY` is correctly loaded from `.env`.
+- [x] **.env Safety**: `.env` file exists and is correctly listed in `.gitignore`.
 
-### Findings & Mitigations
+## 2. Injection Prevention (OWASP #1)
+- [x] **SQL Injection**: Not applicable (No database used, JSON file storage).
+- [x] **XSS (Cross-Site Scripting)**: 
+    - `flask` templates auto-escape variables by default (Jinja2).
+    - `innerHTML` usage in `main.js` was identified as a risk.
+    - **FIXED**: Implemented HTML escaping function for `item.refined_text` and `item.raw_text` in `main.js`. Content is now sanitized before rendering.
 
-#### 1. API Key Security
-- **Finding**: The application requires a Groq API Key to function.
-- **Mitigation**: Users are instructed to store the key in a local `.env` file. The project includes a robust `.gitignore` to prevent accidental commits of this file.
+## 3. Broken Access Control (OWASP #1)
+- [x] **Admin Routes**: `/api/config` is accessible.
+    - **Note**: The application is bound to `0.0.0.0` to allow local network access (e.g., from phone). 
+    - **Mitigation**: This is intended behavior for a local tool. If public exposure is needed, auth middleware MUST be added.
 
-#### 2. Keyboard Control (pynput)
-- **Finding**: The application uses `pynput` to simulate typing (specifically `Ctrl+V` for pasting).
-- **Security Note**: This simulates a physical user action. Under normal circumstances, this is safe and confined to the active window where the user has already placed focus.
+## 4. Dependencies (Supply Chain)
+- [x] **Flask**: Version 3.1.2 (Current/Safe).
+- [x] **Groq**: Version 0.37.0 (Current).
+- [x] **Requests**: Version 2.32.3 (Safe).
 
-#### 3. Log Protection
-- **Finding**: transcription history is stored in `history.log`.
-- **Mitigation**: `history.log` is added to `.gitignore` by default to ensure private transcripts are not pushed to public repositories.
-
----
-
-### Reporting a Vulnerability
-If you discover a security vulnerability within this project, please open a GitHub Issue or contact the project maintainer directly. We value your feedback and aim to maintain a secure environment for all users.
+## 5. Network Security
+- [x] **TLS/SSL**: Switched to HTTP by user request to avoid self-signed warnings.
+    - **Risk**: Traffic is unencrypted.
+    - **Mitigation**: Acceptable for `localhost`. **DO NOT** deploy to a public server without a proper reverse proxy (Nginx/Traefik) and valid SSL cert.

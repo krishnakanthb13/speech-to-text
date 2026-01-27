@@ -152,18 +152,9 @@ import threading
 
 if __name__ == '__main__':
     def open_browser():
-        webbrowser.open_new("https://localhost:8091")
+        webbrowser.open_new("http://localhost:8091")
 
-    # Running securely requires a cert.
-    # We will use adhoc for development if pyopenssl is installed, otherwise HTTP.
-    # The user asked for "https-server".
-    try:
-        threading.Timer(1.5, open_browser).start()
-        # use_reloader=False prevents the code from running twice (and opening 2 tabs)
-        app.run(host='0.0.0.0', port=8091, ssl_context='adhoc', debug=True, use_reloader=False)
-    except Exception as e:
-        print(f"Adhoc SSL failed: {e}. Falling back to HTTP.")
-        # If HTTPS fails, the browser tab above might show an error. 
-        # We try to open the HTTP version too if fallback occurs.
-        threading.Timer(1.5, lambda: webbrowser.open_new("http://localhost:8091")).start()
-        app.run(host='0.0.0.0', port=8091, debug=True, use_reloader=False)
+    # Run in standard HTTP mode to avoid "Not Secure" self-signed warnings on localhost.
+    # Modern Chrome/Edge allows microphone access on http://localhost without needing SSL.
+    threading.Timer(1.5, open_browser).start()
+    app.run(host='0.0.0.0', port=8091, debug=True, use_reloader=False)

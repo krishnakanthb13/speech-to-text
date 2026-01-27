@@ -193,14 +193,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function addHistoryItem(item, prepend) {
         const div = document.createElement('div');
         div.className = 'history-item';
+
+        // Escape HTML to prevent XSS
+        const escapeHtml = (text) => {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return (text || '').replace(/[&<>"']/g, function (m) { return map[m]; });
+        };
+
         div.innerHTML = `
             <div class="history-header">
-                <span>${item.timestamp}</span>
-                <span class="history-profile-badge">${item.profile}</span>
+                <span>${escapeHtml(item.timestamp)}</span>
+                <span class="history-profile-badge">${escapeHtml(item.profile)}</span>
             </div>
             <div class="history-content">
-                ${item.refined_text}
-                <div class="history-raw">Raw: ${item.raw_text}</div>
+                ${escapeHtml(item.refined_text)}
+                <div class="history-raw">Raw: ${escapeHtml(item.raw_text)}</div>
             </div>
             <button class="copy-btn" title="Copy Text"><i class="fa-regular fa-copy"></i></button>
         `;
