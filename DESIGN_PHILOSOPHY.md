@@ -26,6 +26,12 @@ The addition of the **System Tray** and **Windows Auto-start** ensures the tool 
 ### 6. Atomic Actions
 By utilizing standard clipboard paste (`Ctrl+V`) for text insertion, we ensure atomic, instant output that is far more reliable and faster than emulated typing.
 
+### 7. Universal Accessibility (Web UI)
+The Web Interface extends the tool's utility beyond the desktop. By binding to `0.0.0.0` (Local Network), users can access the dictation tool from their **phone or tablet**, turning any device on the network into a high-quality microphone input for their PC.
+
+### 8. Pragmatic Security
+We prioritize usability for localhost environments. Instead of forcing complex self-signed SSL certificates (which trigger browser warnings), we utilize standard HTTP for `localhost` and local network access. This ensures microphone permissions work seamlessly in modern browsers without scary security alerts.
+
 ## Trade-offs & Constraints
 - **Connectivity**: Requires an active internet connection to communicate with Groq.
 - **Platform Focus**: While cross-platform, features like Auto-start and DPI awareness are specifically optimized for the Windows ecosystem.

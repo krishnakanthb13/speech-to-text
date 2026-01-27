@@ -15,14 +15,16 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 ## ✨ Features
 
 - 🚀 **Extreme Speed**: Powered by Groq's Whisper-large-v3-turbo.
+- 🌐 **Modern Web UI**: A beautiful, glassmorphism-styled web interface for recording and management.
+- 📜 **Full History Management**: View, Copy, and **Delete** past transcriptions via the Web UI.
 - 🧠 **Context-Aware Refinement**: Optional AI layer to fix grammar, punctuation, and "ums/ahs".
-- 📥 **System Tray Icon**: Runs in the background with a quick-access menu for toggling features.
+- 📥 **System Tray Icon**: Runs in the background with a quick-access menu (Desktop).
+- 🔐 **Secure & Local**: Web server runs on HTTP/Localhost for maximum privacy and browser compatibility.
 - 🏁 **Windows Auto-start**: Optional setting to launch automatically on login.
 - ⌨️ **Global Hotkeys**: Uses `Ctrl + Alt + Number` combos for instant activation.
-- 🪄 **Auto-Type & Copy**: Automatically types into active windows via `Ctrl+V` and copies to clipboard.
-- 🎨 **Premium Visual Widget**: A floating pill featuring vibrant emojis (🎙, 🤖, ✅) and state-aware color cues.
-- 🔊 **Sound Cues**: Integrated audio feedback for all states.
-- 📜 **Managed Logs**: History is logged in JSON format with automatic 5MB rotation.
+- 🪄 **Auto-Type & Copy**: Automatically types into active windows via `Ctrl+V` and copies to clipboard (Desktop).
+- 🎨 **Premium Visual Widget**: A floating pill featuring vibrant emojis (Desktop).
+- 🔊 **Sound Cues**: Integrated audio feedback for all states (Desktop).
 
 ---
 
@@ -52,7 +54,13 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 - **Windows**: Double-click **`run_groq_stt.bat`**.
 - **Linux / macOS**: Run `chmod +x run_groq_stt.sh` and then **`./run_groq_stt.sh`**.
 
-### ⌨️ Contextual Profiles
+### 🌐 Web Interface (New!)
+A beautiful, modern web UI for dictation, history management, and configuration.
+- **Windows**: Double-click **`run_web_stt.bat`**.
+- **Linux/macOS**: Run **`./run_web_stt.sh`**.
+- **Access**: Open `http://localhost:8091` in your browser. (Also accessible via local network IP).
+
+### ⌨️ Contextual Profiles (Desktop)
 Hold the specific combo to record, then release to transcribe and type:
 
 | Profile | Hotkey | Purpose |

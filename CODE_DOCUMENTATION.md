@@ -11,12 +11,16 @@
 - `run_groq_stt.sh`: Unix/macOS shell script for cross-platform launching.
 - `requirements.txt`: List of Python dependencies (including `pystray`).
 - `.env`: (User provided) Stores the `GROQ_API_KEY`.
+- **`web_server/`**: (New) Directory containing the Flask web application.
+    - `app.py`: Flask backend served by Waitress.
+    - `static/`: JS and CSS assets.
+    - `templates/`: HTML templates.
 
 ## High-Level Architecture
 
 The application operates as a persistent background service. It uses a **Main-Thread GUI** architecture where the Tkinter event loop owns the main thread for stability, while hardware listeners and API processing occur in background threads.
 
-### Core Modules & Components
+### Core Modules & Components (Desktop)
 
 | Component | Description |
 | :--- | :--- |
@@ -26,7 +30,7 @@ The application operates as a persistent background service. It uses a **Main-Th
 | `pynput.keyboard` | Monitors global hotkeys. Runs in a dedicated background thread. |
 | `RotatingFileHandler` | Ensures `history.log` stays within a 5MB limit with automatic backups. |
 
-## Data Flow
+## Data Flow (Desktop)
 
 1. **Trigger**: User holds a profile hotkey. `pynput` triggers `start_recording` in `GroqSTT`.
 2. **Audio Capture**: `sounddevice` streams audio data into a queue.
@@ -36,12 +40,23 @@ The application operates as a persistent background service. It uses a **Main-Th
 6. **Action**: The final text is copied to the clipboard and an atomic `Ctrl+V` is triggered.
 7. **Logging**: The event is recorded in `history.log` via the `logging` module.
 
+## Web Interface Extension (New)
+
+The project now includes a complementary Web Server for managing history and mobile dictation.
+
+### Web Server Architecture
+- **Backend**: `Flask` application running on `Waitress` (Production WSGI) bound to `0.0.0.0` (Local Network).
+- **Frontend**: Vanilla HTML/CSS/JS using a glassmorphism design system.
+- **Shared State**: Reads and writes to the same `config.json` and `history.log` as the desktop app.
+
+### Web API Endpoints
+- `POST /api/record`: Accepts `.webm`, transcribes, refines, and logs.
+- `GET /api/history`: Returns the last 50 entries (reversed).
+- `POST /api/history/delete`: Deletes a log entry by timestamp.
+- `GET/POST /api/config`: Manages application settings.
+
 ## Dependencies
 
-- `groq`: Official Groq Python SDK.
-- `pystray`: System tray icon management.
-- `sounddevice`: Low-latency audio capture.
-- `pynput`: Global keyboard hotkey management.
-- `numpy` & `scipy`: Audio processing.
-- `pyperclip`: Clipboard management.
-- `tkinter`: Visual status indicator.
+- **Core**: `groq`, `numpy`, `scipy`.
+- **Desktop**: `pystray`, `sounddevice`, `pynput`, `pyperclip`, `tkinter` (std lib).
+- **Web**: `flask`, `flask-cors`, `waitress`, `python-dotenv`.
