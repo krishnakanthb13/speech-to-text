@@ -32,8 +32,11 @@ except ImportError:
 import pyperclip
 import winsound
 from datetime import datetime
+import pystray
+import settings_manager
 
 # Load environment variables
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 
 class RecordingIndicator:
@@ -226,6 +229,56 @@ class RecordingIndicator:
             self.root.withdraw()
             self.root.mainloop()
 
+class SystemTray:
+    def __init__(self, app):
+        self.app = app
+        self.icon = None
+        self.running = False
+
+    def run(self):
+        self.running = True
+        try:
+            image = Image.open("assets/main.png")
+        except Exception:
+            # Fallback if image not found, create a simple colored block
+            image = Image.new('RGB', (64, 64), color = 'red')
+
+        menu = pystray.Menu(
+            pystray.MenuItem("Refinement", self.toggle_refinement, checked=lambda item: self.app.config.get('refinement_enabled', False)),
+            pystray.MenuItem("Sounds", self.toggle_sounds, checked=lambda item: self.app.config.get('play_sounds', True)),
+            pystray.MenuItem("Auto-start", self.toggle_autostart, checked=lambda item: settings_manager.is_autostart_enabled()),
+            pystray.MenuItem("Open Settings", self.open_settings),
+            pystray.MenuItem("Exit", self.exit_app)
+        )
+        self.icon = pystray.Icon("HandyGroqSTT", image, "Handy Groq STT", menu)
+        self.icon.run()
+
+    def toggle_refinement(self, icon, item):
+        self.app.config['refinement_enabled'] = not self.app.config['refinement_enabled']
+        self.app.save_config()
+
+    def toggle_sounds(self, icon, item):
+        self.app.config['play_sounds'] = not self.app.config.get('play_sounds', True)
+        self.app.save_config()
+
+    def toggle_autostart(self, icon, item):
+        current = settings_manager.is_autostart_enabled()
+        settings_manager.set_autostart(not current)
+
+    def open_settings(self, icon, item):
+        # Open settings_manager.py in a new terminal window
+        if os.name == 'nt':
+            # Use sys.executable to ensure we use the same python
+            # Quote the executable path in case of spaces
+            cmd = f'"{sys.executable}" settings_manager.py'
+            os.system(f'start "Handy Groq Settings" cmd /k "{cmd}"')
+        else:
+            print("Settings menu only supported via terminal on this platform.")
+
+    def exit_app(self, icon, item):
+        self.icon.stop()
+        self.app.stop_app()
+
 class GroqSTT:
     def __init__(self):
         self.load_config()
@@ -246,12 +299,34 @@ class GroqSTT:
         self.indicator = RecordingIndicator()
         self.ui_thread = threading.Thread(target=self.indicator.start_loop, daemon=True)
         self.ui_thread.start()
+
+        # System Tray
+        self.tray = SystemTray(self)
+        self.tray_thread = threading.Thread(target=self.tray.run, daemon=True)
+        self.tray_thread.start()
         
         self.check_microphone()
         self.current_keys = set()
         self.active_profile = None
         
         self._print_banner()
+
+    def save_config(self):
+        with open("config.json", "w") as f:
+            json.dump(self.config, f, indent=4)
+
+    def stop_app(self):
+        print("\nStopping application...")
+        self.indicator.hide()
+        if self.recording:
+            self.stop_recording()
+        # Create a dummy keyboard event or force exit to break the listener loop if needed
+        # But sys.exit(0) is usually enough for daemon threads.
+        # However, the main thread is blocked on listener.join().
+        # We need to stop the listener.
+        # listener.stop() is not directly accessible here easily unless we store it.
+        # We'll use os._exit(0) to force kill everything.
+        os._exit(0)
 
     def _print_banner(self):
         print("\n" + "="*50)
@@ -457,10 +532,9 @@ class GroqSTT:
         # Safe Exit: Ctrl + Alt + 0
         if all(k in self.current_keys for k in ['ctrl_l', 'alt_l', '0']):
             print("\n[!] Safe Exit triggered. Cleaning up...")
-            self.indicator.hide()
-            if self.recording:
-                self.stop_recording()
-            sys.exit(0)
+            if self.tray and self.tray.icon:
+                self.tray.icon.stop()
+            self.stop_app()
 
         if not self.recording:
             for profile in self.config['profiles']:
