@@ -2,6 +2,8 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
+![Handy-Groq STT](./assets/release_v0.1.0.png)
+
 ![Handy-Groq STT](./assets/release_v0.0.10.png)
 
 **Handy-Groq: Press, speak, and watch your thoughts turn into perfectly refined text in any application.**
