@@ -7,3 +7,6 @@ python-dotenv
 pyperclip
 Pillow
 pystray
+flask
+flask-cors
+waitress
