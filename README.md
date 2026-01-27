@@ -16,12 +16,13 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 
 - 🚀 **Extreme Speed**: Powered by Groq's Whisper-large-v3-turbo.
 - 🧠 **Context-Aware Refinement**: Optional AI layer to fix grammar, punctuation, and "ums/ahs".
-- ⌨️ **Rare Global Hotkeys**: Uses `Ctrl + Alt + Number` combos to avoid app conflicts.
-- 🪄 **Auto-Type & Copy**: Automatically types into active windows (Notepad++, IDEs, Browsers) and copies to clipboard.
-- 🎨 **Premium Visual Widget**: A floating, glassmorphism-inspired pill featuring **vibrant, native emojis** (🎙, 🤖, ✅) and state-aware color cues.
-- 🔊 **Sound Cues**: Integrated audio feedback for start, stop, success, and errors.
-- 📜 **JSON History**: Every entry is logged with metadata in `history.log`.
-- ⚙️ **Settings Manager**: Change models, prompts, and hotkeys via a simple CLI menu.
+- 📥 **System Tray Icon**: Runs in the background with a quick-access menu for toggling features.
+- 🏁 **Windows Auto-start**: Optional setting to launch automatically on login.
+- ⌨️ **Global Hotkeys**: Uses `Ctrl + Alt + Number` combos for instant activation.
+- 🪄 **Auto-Type & Copy**: Automatically types into active windows via `Ctrl+V` and copies to clipboard.
+- 🎨 **Premium Visual Widget**: A floating pill featuring vibrant emojis (🎙, 🤖, ✅) and state-aware color cues.
+- 🔊 **Sound Cues**: Integrated audio feedback for all states.
+- 📜 **Managed Logs**: History is logged in JSON format with automatic 5MB rotation.
 
 ---
 
@@ -37,7 +38,7 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
    - Add your [Groq API Key](https://console.groq.com/keys).
 
 3. **Get the Visual Widget (Optional but Recommended)**:
-   - Ensure `tkinter` is installed (standard with Python on Windows). If missing, run a "Modify/Repair" on your Python installation and check "tcl/tk".
+   - Ensure `tkinter` is installed (standard with Python on Windows).
 
 ---
 
@@ -47,10 +48,8 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 - **Windows**: Double-click **`run_groq_stt.bat`**.
 - **Linux / macOS**: Run `chmod +x run_groq_stt.sh` and then **`./run_groq_stt.sh`**.
 
-The launcher will automatically check for dependencies, prioritize global packages, or setup a virtual environment if needed.
-
 ### ⌨️ Contextual Profiles
-Hold the specific combo to record, then release twice to transcribe and type:
+Hold the specific combo to record, then release to transcribe and type:
 
 | Profile | Hotkey | Purpose |
 | :--- | :--- | :--- |
@@ -60,9 +59,11 @@ Hold the specific combo to record, then release twice to transcribe and type:
 | **Meeting** | `Ctrl + Alt + 4` | Summarize speech into action items |
 | **Simple** | `Ctrl + Alt + 5` | Convert jargon to plain English |
 | **Social** | `Ctrl + Alt + 6` | Catchy posts for LinkedIn/X |
+| **Safe Exit** | `Ctrl + Alt + 0` | Stop and close the application |
 
 ### ⚙️ Settings
-Run **`run_groq_stt.bat`** and select **Option 2** to:
+Access settings via the **Tray Icon** (right-click) or **CLI** (Option 2):
+- Toggle **Auto-start on Windows**.
 - Change STT & Refinement Models.
 - Toggle Refinement, Sounds, or Logging.
 - Edit Prompts and Hotkeys.
