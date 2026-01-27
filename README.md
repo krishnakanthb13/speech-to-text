@@ -32,6 +32,10 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
    ```bash
    pip install -r requirements.txt
    ```
+   *Note for macOS users:* To enable the System Tray Icon, you also need:
+   ```bash
+   pip install pyobjc-framework-Cocoa
+   ```
 
 2. **Configure API Key**:
    - Rename `.env.example` to `.env`.

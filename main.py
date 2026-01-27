@@ -264,10 +264,17 @@ class SystemTray:
 
     def open_settings(self, icon, item):
         if os.name == 'nt':
-            # Use sys.executable to ensure we use the same python
-            # Quote the executable path in case of spaces
+            # Windows: Launch in a new cmd window
             cmd = f'"{sys.executable}" settings_manager.py'
             os.system(f'start "Handy Groq Settings" cmd /k "{cmd}"')
+        elif sys.platform == 'darwin':
+            # macOS: Use AppleScript to open a new Terminal and run the settings manager
+            # We use the absolute path to ensure the script is found
+            script_path = os.path.join(os.getcwd(), "settings_manager.py")
+            cmd = f'"{sys.executable}" "{script_path}"'
+            applescript = f'tell application "Terminal" to do script {json.dumps(cmd)}'
+            os.system(f"osascript -e '{applescript}'")
+            os.system('open -a Terminal')
         else:
             print("Settings menu only supported via terminal on this platform.")
 
