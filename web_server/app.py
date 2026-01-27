@@ -79,8 +79,8 @@ def get_history():
                             pass
         except Exception as e:
             print(f"Error reading history: {e}")
-    # Return reversed (newest first)
-    return jsonify(history[::-1])
+    # Return newest 50 entries
+    return jsonify(history[-50:][::-1])
 
 @app.route('/api/record', methods=['POST'])
 def upload_audio():
@@ -147,14 +147,61 @@ def upload_audio():
         "entry": log_entry
     })
 
+@app.route('/api/history/delete', methods=['POST'])
+def delete_history_item():
+    data = request.json
+    timestamp_to_delete = data.get('timestamp')
+    
+    if not timestamp_to_delete:
+        return jsonify({"error": "Missing timestamp"}), 400
+
+    if not os.path.exists(HISTORY_PATH):
+        return jsonify({"error": "History file not found"}), 404
+
+    try:
+        # Read all lines
+        with open(HISTORY_PATH, "r", encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        # Rewrite file excluding the matching item
+        # We assume one entry per line as enforced by append_history
+        deleted = False
+        with open(HISTORY_PATH, "w", encoding='utf-8') as f:
+            for line in lines:
+                try:
+                    entry = json.loads(line)
+                    if entry.get("timestamp") == timestamp_to_delete:
+                        deleted = True
+                        continue # Skip writing this line
+                    f.write(line)
+                except json.JSONDecodeError:
+                    f.write(line) # Preserve malformed lines just in case
+        
+        if deleted:
+            return jsonify({"status": "success"})
+        else:
+            return jsonify({"error": "Item not found"}), 404
+            
+    except Exception as e:
+        print(f"Error deleting history item: {e}")
+        return jsonify({"error": str(e)}), 500
+
 import webbrowser
 import threading
+from waitress import serve
 
 if __name__ == '__main__':
     def open_browser():
         webbrowser.open_new("http://localhost:8091")
 
-    # Run in standard HTTP mode to avoid "Not Secure" self-signed warnings on localhost.
-    # Modern Chrome/Edge allows microphone access on http://localhost without needing SSL.
+    print("===========================================")
+    print("    🚀 Starting Production Server...")
+    print("    👉 Open: http://localhost:8091")
+    print("    👉 Close: Ctrl + C")
+    print("===========================================")
+
+    # Open browser after delay
     threading.Timer(1.5, open_browser).start()
-    app.run(host='0.0.0.0', port=8091, debug=True, use_reloader=False)
+    
+    # Use waitress for production-grade WSGI server (removes Flask dev warning)
+    serve(app, host='0.0.0.0', port=8091)

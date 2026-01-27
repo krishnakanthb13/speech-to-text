@@ -46,7 +46,7 @@ cls
 echo ===========================================
 echo       🎙️  Handy-Groq Web Interface
 echo ===========================================
-echo   Open your browser to: http://localhost:8091
+echo Open your browser to: http://localhost:8091
 echo ===========================================
 cd web_server
 python app.py

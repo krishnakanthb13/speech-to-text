@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         config.profiles.forEach((p, index) => {
             const opt = document.createElement('option');
             opt.value = p.name;
-            opt.textContent = p.name + ` (${p.hotkey ? p.hotkey.join('+') : ''})`;
+            opt.textContent = p.name; // Removed hotkey display
             profileSelect.appendChild(opt);
         });
 
@@ -99,10 +99,37 @@ document.addEventListener('DOMContentLoaded', () => {
     historyBtn.addEventListener('click', () => toggleModal(historyModal, true));
     closeHistoryBtn.addEventListener('click', () => toggleModal(historyModal, false));
 
-    // Close on outside click
+    // Close on simple outside click
     window.addEventListener('click', (e) => {
         if (e.target === settingsModal) toggleModal(settingsModal, false);
         if (e.target === historyModal) toggleModal(historyModal, false);
+    });
+
+    // Shortcuts
+    document.addEventListener('keydown', (e) => {
+        // ESC to close any modal
+        if (e.key === 'Escape') {
+            toggleModal(settingsModal, false);
+            toggleModal(historyModal, false);
+        }
+
+        // Ctrl+C to close (User Request), but ONLY if no text is selected
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+            const selection = window.getSelection();
+            // If text is highlighted, let default copy happen.
+            // If nothing is highlighted, treat as "Cancel/Close"
+            if (!selection || selection.toString().length === 0) {
+                // Check which modal is open and close it
+                if (!settingsModal.classList.contains('hidden')) {
+                    e.preventDefault(); // Prevent copy sound/action if empty
+                    toggleModal(settingsModal, false);
+                }
+                if (!historyModal.classList.contains('hidden')) {
+                    e.preventDefault();
+                    toggleModal(historyModal, false);
+                }
+            }
+        }
     });
 
     // 4. Recording Logic
@@ -216,7 +243,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="history-raw">Raw: ${escapeHtml(item.raw_text)}</div>
             </div>
             <button class="copy-btn" title="Copy Text"><i class="fa-regular fa-copy"></i></button>
+            <button class="delete-btn" title="Delete"><i class="fa-solid fa-trash"></i></button>
         `;
+
+        // Delete Logic
+        const deleteBtn = div.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete this specific recording?')) return;
+
+            try {
+                const res = await fetch('/api/history/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ timestamp: item.timestamp })
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    // Smooth removal
+                    div.style.transition = 'all 0.3s';
+                    div.style.opacity = '0';
+                    div.style.transform = 'translateX(20px)';
+                    setTimeout(() => div.remove(), 300);
+                } else {
+                    alert('Error deleting item: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Connection error while deleting.');
+            }
+        });
 
         // Copy Logic
         const copyBtn = div.querySelector('.copy-btn');

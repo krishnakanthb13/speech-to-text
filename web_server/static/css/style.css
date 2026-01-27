@@ -49,6 +49,7 @@ header h1 {
     font-weight: 700;
     background: linear-gradient(to right, #ffffff, #cfcfa0);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -259,7 +260,8 @@ select:focus {
     z-index: 100;
     backdrop-filter: blur(8px);
     opacity: 1;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.3s ease;
+    will-change: opacity;
 }
 
 .modal.hidden {
@@ -276,7 +278,8 @@ select:focus {
     padding: 2rem;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     transform: translateY(0);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    will-change: transform;
 }
 
 .modal.hidden .modal-content {
@@ -354,8 +357,8 @@ select:focus {
     font-size: 0.75rem;
     color: var(--text-muted);
     margin-bottom: 0.75rem;
-    padding-right: 2.5rem;
-    /* Space for copy button */
+    padding-right: 5rem;
+    /* Space for copy + delete buttons */
 }
 
 .history-profile-badge {
@@ -403,6 +406,26 @@ select:focus {
 .copy-btn:hover {
     color: var(--text-main);
     background: rgba(255, 255, 255, 0.1);
+}
+
+.delete-btn {
+    position: absolute;
+    top: 1rem;
+    right: 3rem;
+    /* Spaced to the left of copy button */
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 5px;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.delete-btn:hover {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
 }
 
 /* MISC SETTINGS */
