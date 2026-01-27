@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groq STT Web</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1><i class="fa-solid fa-microphone-lines"></i> Handy Groq</h1>
+            <button id="settings-btn" class="icon-btn" title="Settings"><i class="fa-solid fa-gear"></i></button>
+        </header>
+
+        <main>
+            <div class="recorder-section">
+                <div class="profile-selector">
+                    <label for="profile-select"><i class="fa-solid fa-sliders"></i> Mode</label>
+                    <select id="profile-select">
+                        <!-- Populated by JS -->
+                    </select>
+                    <div class="prompt-preview" id="prompt-display"></div>
+                </div>
+
+                <div class="mic-container">
+                    <button id="mic-btn" class="mic-button">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <div class="pulse-ring"></div>
+                    <div class="status-text" id="status-text">Ready to Record</div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h2>History</h2>
+                <div id="history-list" class="history-list">
+                    <!-- History items -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-group">
+                        <label>STT Model</label>
+                        <select id="stt-model-select">
+                            <option value="whisper-large-v3-turbo">Whisper Large V3 Turbo</option>
+                            <option value="whisper-large-v3">Whisper Large V3</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>Refinement Model</label>
+                        <select id="refinement-model-select">
+                            <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                            <option value="groq/compound">Groq Compound</option>
+                        </select>
+                    </div>
+                    <div class="setting-group toggle">
+                        <label>Enable Refinement</label>
+                        <input type="checkbox" id="refinement-toggle">
+                        <span class="slider"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="save-settings" class="primary-btn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
