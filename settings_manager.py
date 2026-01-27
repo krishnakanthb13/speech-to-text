@@ -2,6 +2,8 @@ import json
 import os
 import time
 import sys
+from pynput.keyboard import Key, KeyCode
+
 try:
     import winreg
 except ImportError:
@@ -159,8 +161,25 @@ def edit_profiles(config):
                 print(f"Current Hotkey: {' '.join(p['hotkey'])}")
                 print("Tip: Use 'grave' for the ~ key, 'alt_l' for left Alt.")
                 new_hk = input("Enter new hotkeys (e.g., alt_l grave) or Enter to keep: ")
-                if new_hk: p['hotkey'] = new_hk.split()
-                
+                if new_hk:
+                    parts = new_hk.split()
+                    valid = True
+                    for k in parts:
+                        k_clean = k.lower().strip()
+                        # check if it is a special key in pynput
+                        if not hasattr(Key, k_clean) and len(k_clean) > 1:
+                            # If not a single char and not in Key.*, it might be invalid
+                            # allow simple chars
+                            print(f"[!] Warning: '{k}' might be an invalid key name.")
+                            valid = False
+                    
+                    if valid:
+                        p['hotkey'] = parts
+                    else:
+                        confirm = input("Save anyway? (y/N): ")
+                        if confirm.lower() == 'y':
+                            p['hotkey'] = parts
+
                 print(f"\nCurrent Prompt: {p['prompt']}")
                 new_prompt = input("Enter new prompt or Enter to keep: ")
                 if new_prompt: p['prompt'] = new_prompt

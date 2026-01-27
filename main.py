@@ -12,13 +12,16 @@ from dotenv import load_dotenv
 from pynput import keyboard
 import scipy.io.wavfile as wavfile
 from PIL import Image, ImageDraw, ImageFont, ImageTk
+import logging
+from logging.handlers import RotatingFileHandler
+
 try:
     import ctypes
     try:  # Windows 8.1+
         # PROCESS_PER_MONITOR_DPI_AWARE = 2
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
     except AttributeError:  # Windows Vista/7
-        ctypes.windll.user32.SetProcessDPIAware()
+        ctypes.windll.user32.SetProcessDpiAwareness(1)
 except Exception:
     pass  # DPI awareness is not critical
 
@@ -36,8 +39,19 @@ import pystray
 import settings_manager
 
 # Load environment variables
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
 load_dotenv()
+
+ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+
+# Configure Logging
+log_formatter = logging.Formatter('%(message)s')
+log_handler = RotatingFileHandler("history.log", maxBytes=5*1024*1024, backupCount=2, encoding='utf-8')
+log_handler.setFormatter(log_formatter)
+logger = logging.getLogger("HandyGroq")
+logger.setLevel(logging.INFO)
+logger.addHandler(log_handler)
 
 class RecordingIndicator:
     def __init__(self):
@@ -49,23 +63,106 @@ class RecordingIndicator:
         self.animation_id = None
         self.dot_pulse = 0
         self.emoji_cache = {}
-        if not TK_AVAILABLE:
+        
+        if TK_AVAILABLE:
+            try:
+                self.root = tk.Tk()
+                self.root.overrideredirect(True)
+                self.root.attributes("-topmost", True)
+                self.root.attributes("-alpha", 0.90)
+                # Hide initially
+                self.root.withdraw()
+                self._create_layout()
+            except Exception as e:
+                print(f"[WARN] Tkinter Init Failed: {e}")
+                self.root = None
+        else:
             print("[INFO] Tkinter not found. Visual indicator disabled.")
 
+    def _thread_safe(self, func, *args, **kwargs):
+        """Marshal UI calls to the main thread."""
+        if self.root:
+            self.root.after(0, lambda: func(*args, **kwargs))
+
     def show(self, text="Listening...", state="recording"):
-        if not TK_AVAILABLE: return
-        if not self.root: self._create_window()
+        self._thread_safe(self._show_impl, text, state)
+
+    def _show_impl(self, text, state):
+        if not self.root: return
         self._update_state(state, text)
         self.root.deiconify()
         self.visible = True
         self._pulse()
 
-    def _update_state(self, state, profile_name=None):
-        """Centralized state update for UI elements."""
-        self.state = state
-        if not self.canvas: return
+    def hide(self):
+        self._thread_safe(self._hide_impl)
+
+    def _hide_impl(self):
+        if not self.root: return
+        self.state = "idle"
+        # after_cancel is tricky if ID is stale, but usually safe to ignore errors
+        if self.animation_id:
+            try: self.root.after_cancel(self.animation_id)
+            except: pass
+            self.animation_id = None
+        self.root.withdraw()
+        self.visible = False
+
+    def update_text(self, text, state=None):
+        self._thread_safe(self._update_text_impl, text, state)
+
+    def _update_text_impl(self, text, state):
+        if state:
+            self._update_state(state, text)
+
+    def _create_layout(self):
+        """Build the UI elements inside the existing root."""
+        # Transparent background key
+        bg_color = "#1e1e1e" # Dark background
+        transparent_key = "#000001"
         
-        # States with Emojis, Text and Colors
+        self.root.configure(bg=transparent_key)
+        self.root.attributes("-transparentcolor", transparent_key)
+        
+        # Size and position
+        width, height = 230, 44
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width // 2) - (width // 2)
+        y = screen_height - 120
+        self.root.geometry(f"{width}x{height}+{x}+{y}")
+        
+        self.canvas = tk.Canvas(self.root, width=width, height=height, bg=transparent_key, highlightthickness=0)
+        self.canvas.pack()
+        
+        # 1. Basic Box
+        self.box_id = self.canvas.create_rectangle(
+            2, 2, width-2, height-2,
+            fill=bg_color,
+            outline="white",
+            width=2
+        )
+        
+        # 2. Status Label
+        self.label = tk.Label(
+            self.root,
+            bg=bg_color,
+            borderwidth=0,
+            highlightthickness=0
+        )
+        self.label.place(x=18, rely=0.5, anchor=tk.W)
+
+        # 3. Status Dot
+        self.dot_id = self.canvas.create_oval(
+            width - 28, height//2 - 4, 
+            width - 20, height//2 + 4, 
+            fill="white", outline=""
+        )
+
+    def _update_state(self, state, profile_name=None):
+        self.state = state
+        if not getattr(self, 'canvas', None): return
+        
         states = {
             "recording": ("🎙", "Listening", "#ff4444"),
             "processing": ("🤖", "Processing...", "#ffbb00"),
@@ -73,143 +170,50 @@ class RecordingIndicator:
         }
         emoji, text, color = states.get(state, ("?", "...", "white"))
         
-        # If recording, include the profile name alongside "Listening"
         if state == "recording" and profile_name:
-            # Capitalize only the first letter of the profile name for sentence case
             formatted_profile = profile_name.strip().capitalize()
             if formatted_profile != "Listening":
                 text = f"Listening ({formatted_profile})"
             else:
                 text = "Listening..."
 
-        # Render Emoji as Image (Bypasses Tkinter's monochrome text rendering)
         try:
             full_text = f"{emoji} {text}"
             if full_text not in self.emoji_cache:
-                # Create a transparent image for the text + emoji
-                # Use a larger size for better anti-aliasing then scale down
                 img_w, img_h = 600, 100
                 img = Image.new('RGBA', (img_w, img_h), (0, 0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                
-                # Fonts: emoji font for symbols, Segoe UI Bold for text
                 try: 
-                    # Further increased sizes for better visibility
                     emoji_font = ImageFont.truetype("seguiemj.ttf", 48)
-                    text_font = ImageFont.truetype("seguisb.ttf", 40) # Semi-bold/Bold
+                    text_font = ImageFont.truetype("seguisb.ttf", 40)
                 except: 
                     emoji_font = text_font = ImageFont.load_default()
                 
-                # Draw Emoji and Text - Shifted LEFT within the image (anchor "lm")
-                # Emoji
                 draw.text((15, img_h//2), emoji, font=emoji_font, fill=color, anchor="lm", embedded_color=True)
-                # Text (shifted right of emoji)
                 draw.text((90, img_h//2), text, font=text_font, fill=color, anchor="lm")
                 
-                # Resize to fit the pill (Balanced for 230px width)
                 img = img.resize((170, 34), Image.Resampling.LANCZOS)
                 self.emoji_cache[full_text] = ImageTk.PhotoImage(img)
             
-            # Update the existing Label with the new image
             if hasattr(self, 'label'):
                 self.label.config(image=self.emoji_cache[full_text])
-                self.label.image = self.emoji_cache[full_text] # Keep reference
+                self.label.image = self.emoji_cache[full_text]
         except Exception as e:
-            print(f"[WARN] Emoji rendering failed: {e}")
             if hasattr(self, 'label'):
                 self.label.config(text=f"{emoji} {text}", fg=color, image='')
 
         self.canvas.itemconfig(self.box_id, outline=color)
 
-        # Handle Dot visibility
         if state == "typing":
             self.canvas.itemconfig(self.dot_id, state='hidden')
         else:
             self.canvas.itemconfig(self.dot_id, state='normal')
             self.canvas.itemconfig(self.dot_id, fill=color)
 
-    def hide(self):
-        if not TK_AVAILABLE: return
-        self.state = "idle"
-        if self.animation_id:
-            self.root.after_cancel(self.animation_id)
-            self.animation_id = None
-        if self.root: self.root.withdraw()
-        self.visible = False
-
-    def _create_window(self):
-        global TK_AVAILABLE
-        if not TK_AVAILABLE: return
-        try:
-            self.root = tk.Tk()
-            self.root.overrideredirect(True)
-            self.root.attributes("-topmost", True)
-            self.root.attributes("-alpha", 0.90)
-            
-            # Transparent background key
-            bg_color = "#1e1e1e" # Dark background
-            transparent_key = "#000001"
-            
-            self.root.configure(bg=transparent_key)
-            self.root.attributes("-transparentcolor", transparent_key)
-            
-            # Size and position - Tightened to 230px for a more cohesive "pill" look
-            width, height = 230, 44
-            screen_width = self.root.winfo_screenwidth()
-            screen_height = self.root.winfo_screenheight()
-            x = (screen_width // 2) - (width // 2)
-            y = screen_height - 120
-            self.root.geometry(f"{width}x{height}+{x}+{y}")
-            
-            # Canvas for the pill background and border
-            self.canvas = tk.Canvas(self.root, width=width, height=height, bg=transparent_key, highlightthickness=0)
-            self.canvas.pack()
-            
-            # 1. Basic Box (Rectangle)
-            self.box_id = self.canvas.create_rectangle(
-                2, 2, width-2, height-2,
-                fill=bg_color,
-                outline="white",
-                width=2
-            )
-            
-            # 2. Status Label - Using an image-based label for rich emojis
-            self.label = tk.Label(
-                self.root,
-                bg=bg_color,
-                borderwidth=0,
-                highlightthickness=0
-            )
-            # Positioned with a slightly larger left margin (18px)
-            self.label.place(x=18, rely=0.5, anchor=tk.W)
-
-            # 3. Status Dot - Pulsing indicator on the right
-            # Positioned closer to the text area
-            self.dot_id = self.canvas.create_oval(
-                width - 28, height//2 - 4, 
-                width - 20, height//2 + 4, 
-                fill="white", outline=""
-            )
-            
-            internal_render_width = 170
-            if 18 + internal_render_width > (width - 28):
-                print("[WARN] UI Layout conflict: Label might overlap dot.")
-
-        except Exception as e:
-            print(f"[WARN] UI Init Failed: {e}")
-            TK_AVAILABLE = False
-
     def _pulse(self):
         if not self.visible or self.state != "recording": return
         self.dot_pulse = (self.dot_pulse + 1) % 2
-        
-        # Pulse the dot opacity or color
-        # Since we use the border/text for main color, let's just pulse the dot between red and white
-        # But wait, _update_state sets the color.
-        # Let's pulse the Dot for "Recording" specifically.
-        
-        base_color = "#ff4444" # Red
-        # Toggle between base color and a lighter/white shade
+        base_color = "#ff4444"
         pulse_color = "white" if self.dot_pulse == 0 else base_color
         
         if self.canvas and self.dot_id:
@@ -217,16 +221,9 @@ class RecordingIndicator:
              
         self.animation_id = self.root.after(500, self._pulse)
 
-    def update_text(self, text, state=None):
-        if not TK_AVAILABLE: return
-        if state:
-            self._update_state(state, text)
-
     def start_loop(self):
-        if not TK_AVAILABLE: return
-        self._create_window()
         if self.root:
-            self.root.withdraw()
+            print("[INFO] Starting UI Mainloop...")
             self.root.mainloop()
 
 class SystemTray:
@@ -237,10 +234,10 @@ class SystemTray:
 
     def run(self):
         self.running = True
+        icon_path = os.path.join(ASSETS_DIR, "main.png")
         try:
-            image = Image.open("assets/main.png")
+            image = Image.open(icon_path)
         except Exception:
-            # Fallback if image not found, create a simple colored block
             image = Image.new('RGB', (64, 64), color = 'red')
 
         menu = pystray.Menu(
@@ -266,7 +263,6 @@ class SystemTray:
         settings_manager.set_autostart(not current)
 
     def open_settings(self, icon, item):
-        # Open settings_manager.py in a new terminal window
         if os.name == 'nt':
             # Use sys.executable to ensure we use the same python
             # Quote the executable path in case of spaces
@@ -280,7 +276,8 @@ class SystemTray:
         self.app.stop_app()
 
 class GroqSTT:
-    def __init__(self):
+    def __init__(self, indicator):
+        self.indicator = indicator
         self.load_config()
         self.api_key = os.getenv("GROQ_API_KEY")
         if not self.api_key:
@@ -295,21 +292,24 @@ class GroqSTT:
         self.audio_data = []
         self.keyboard_controller = keyboard.Controller()
         
-        # UI Indicator
-        self.indicator = RecordingIndicator()
-        self.ui_thread = threading.Thread(target=self.indicator.start_loop, daemon=True)
-        self.ui_thread.start()
-
-        # System Tray
-        self.tray = SystemTray(self)
-        self.tray_thread = threading.Thread(target=self.tray.run, daemon=True)
-        self.tray_thread.start()
-        
         self.check_microphone()
         self.current_keys = set()
         self.active_profile = None
         
+        # Initialize listener but don't start yet
+        self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+        
         self._print_banner()
+
+    def start(self):
+        """Starts background threads (Listener, Tray)."""
+        # Start Keyboard Listener (non-blocking mode)
+        self.listener.start()
+        
+        # Start System Tray (in background thread)
+        self.tray = SystemTray(self)
+        self.tray_thread = threading.Thread(target=self.tray.run, daemon=True)
+        self.tray_thread.start()
 
     def save_config(self):
         with open("config.json", "w") as f:
@@ -320,12 +320,7 @@ class GroqSTT:
         self.indicator.hide()
         if self.recording:
             self.stop_recording()
-        # Create a dummy keyboard event or force exit to break the listener loop if needed
-        # But sys.exit(0) is usually enough for daemon threads.
-        # However, the main thread is blocked on listener.join().
-        # We need to stop the listener.
-        # listener.stop() is not directly accessible here easily unless we store it.
-        # We'll use os._exit(0) to force kill everything.
+        # Force exit to kill all threads including mainloop
         os._exit(0)
 
     def _print_banner(self):
@@ -362,7 +357,7 @@ class GroqSTT:
             elif sound_type == "success": winsound.Beep(900, 120)
             elif sound_type == "error": winsound.Beep(200, 400)
         except Exception:
-            pass  # Sound is not critical
+            pass
 
     def check_microphone(self):
         try:
@@ -439,8 +434,7 @@ class GroqSTT:
                     return self.client.audio.transcriptions.create(file=(temp_filename, file.read()), model=self.config['stt_model'])
             trans = self.groq_request_with_retry(call_stt)
             return trans.text.strip()
-        except Exception as e:
-            print(f" Transcription fail: {e}"); self.play_sound("error"); return None
+        except Exception as e: print(f" Transcription fail: {e}"); self.play_sound("error"); return None
         finally:
             if os.path.exists(temp_filename): os.remove(temp_filename)
 
@@ -455,8 +449,7 @@ class GroqSTT:
                 )
             res = self.groq_request_with_retry(call_refinement)
             return res.choices[0].message.content.strip()
-        except Exception as e:
-            print(f" Refinement fail: {e}"); return text
+        except Exception as e: print(f" Refinement fail: {e}"); return text
 
     def perform_action(self, text, raw_text):
         if not text: return
@@ -478,18 +471,18 @@ class GroqSTT:
 
     def log_to_file(self, raw, refined):
         try:
-            with open("history.log", "a", encoding="utf-8") as f:
-                ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                prof = self.active_profile['name'] if self.active_profile else "General"
-                log_entry = {
-                    "timestamp": ts,
-                    "profile": prof,
-                    "raw_text": raw,
-                    "refined_text": refined,
-                    "stt_model": self.config['stt_model'],
-                    "refinement_model": self.config['refinement_model']
-                }
-                f.write(json.dumps(log_entry) + "\n")
+            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            prof = self.active_profile['name'] if self.active_profile else "General"
+            log_entry = {
+                "timestamp": ts,
+                "profile": prof,
+                "raw_text": raw,
+                "refined_text": refined,
+                "stt_model": self.config['stt_model'],
+                "refinement_model": self.config['refinement_model']
+            }
+            # Logger is configured to write just the message (JSON)
+            logger.info(json.dumps(log_entry))
         except Exception as e: print(f"Logging error: {e}")
 
     def _get_key_name(self, key):
@@ -497,7 +490,6 @@ class GroqSTT:
         try:
             if hasattr(key, 'name') and key.name:
                 name = key.name
-                # Normalize common modifier names
                 if name == 'ctrl': return 'ctrl_l'
                 if name == 'alt': return 'alt_l'
                 if name == 'shift': return 'shift_l'
@@ -505,26 +497,22 @@ class GroqSTT:
             if hasattr(key, 'char') and key.char:
                 return key.char.lower()
             
-            # Fallback for weird cases (like Numpad or AltGr combinations)
-            s = str(key).lower().strip("'").strip('"')
+            s = str(key).lower().strip("'" ).strip('"')
             if 'key.' in s:
                 s = s.replace('key.', '').strip()
             
-            # Map Numpad virtual key codes to numbers
             numpad_map = {
                 '<96>': '0', '<97>': '1', '<98>': '2', '<99>': '3',
                 '<100>': '4', '<101>': '5', '<102>': '6', '<103>': '7',
                 '<104>': '8', '<105>': '9'
             }
             return numpad_map.get(s, s)
-        except Exception:
-            return str(key).lower()
+        except Exception: return str(key).lower()
 
     def on_press(self, key):
         name = self._get_key_name(key)
         self.current_keys.add(name)
         
-        # Windows AltGr handling: AltGr = Ctrl + Alt
         if name == 'alt_gr':
             self.current_keys.add('ctrl_l')
             self.current_keys.add('alt_l')
@@ -553,7 +541,6 @@ class GroqSTT:
             if 'alt_l' in self.current_keys: self.current_keys.remove('alt_l')
         
         if self.recording and self.active_profile:
-            # If ANY key from the active combo is released, stop recording
             if name in self.active_profile['key_names']:
                 audio = self.stop_recording()
                 if audio is not None:
@@ -567,19 +554,25 @@ class GroqSTT:
             print(f" \"{raw_text}\" -> ", end="", flush=True)
             refined_text = self.refine_text(raw_text)
             print(f"Done.")
-            
-            # Atomic Action: Only modify clipboard/type once with the final result
             self.perform_action(refined_text, raw_text)
             
-        time.sleep(1.0) # Show success state for a moment
+        time.sleep(1.0)
         self.indicator.hide()
         self.active_profile = None
 
-    def run(self):
-        with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as listener:
-            listener.join()
-
 if __name__ == "__main__":
-    app = GroqSTT()
-    try: app.run()
-    except KeyboardInterrupt: print("\nExiting...")
+    # 1. Initialize UI (Main Thread Owner)
+    indicator = RecordingIndicator()
+    
+    # 2. Initialize App Logic (Pass UI reference)
+    app = GroqSTT(indicator)
+    
+    # 3. Start Background Threads (Listener, Tray)
+    app.start()
+    
+    # 4. Start Blocking UI Loop (Must be last)
+    try:
+        indicator.start_loop()
+    except KeyboardInterrupt:
+        print("\nExiting...")
+        os._exit(0)
