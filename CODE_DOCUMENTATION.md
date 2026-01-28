@@ -51,8 +51,20 @@ The project now includes a complementary Web Server for managing history and mob
 - **Frontend**: Vanilla HTML/CSS/JS using a glassmorphism design system.
 - **Shared State**: Reads and writes to the same `config.json` and `history.log` as the desktop app.
 
+### Web Server Logic (`app.py`)
+- **Aggressive Prompt Injection**: The backend now employs an "Aggressive Mode" for personality parameters. If a user deviates from defaults (40-60 range), the system **overrides** the base prompt with rigid directives (e.g., "You are a ROBOT", "Be ANGRY"), ensuring the LLM radically transforms the text style rather than just refining it.
+- **Debug Logging**: Explicit `print` statements track the received `chatParams` and the final generated prompt for easy terminal debugging.
+
+### Frontend Logic (`main.js`)
+- **Auto-Clipboard**: Successful transcriptions are immediately written to the `navigator.clipboard` API.
+- **Direct Feedback**: Replaced complex toast notifications with a simple, high-visibility status updates (e.g., "Done! (Ctrl+V to paste)") that persist for 4 seconds.
+- **History Management**:
+  - **Custom Badges**: Parses stored `chat_params` to dynamically append a "🎭 Custom" badge to history items.
+  - **Empty States**: Displays a playful "Ghost" empty state when no history is found.
+  - **Error Handling**: Gracefully handles network failures during fetch/delete operations.
+
 ### Web API Endpoints
-- `POST /api/record`: Accepts `.webm`, transcribes, refines, and logs.
+- `POST /api/record`: Accepts `.webm`, transcribes, refines (with personality injection), and logs.
 - `GET /api/history`: Returns the last 50 entries (reversed).
 - `POST /api/history/delete`: Deletes a log entry by timestamp.
 - `GET/POST /api/config`: Manages application settings.

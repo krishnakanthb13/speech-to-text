@@ -2,6 +2,8 @@
     --bg-color: #0f0f13;
     --card-bg: rgba(30, 30, 35, 0.4);
     --card-hover: rgba(40, 40, 50, 0.7);
+    --surface: #1e1e24;
+    /* Added missing surface variable */
     --primary: #ff4500;
     --accent: #5555ff;
     --text-main: #ffffff;
@@ -732,4 +734,10 @@ select:focus {
     font-style: italic;
     margin-top: 0.5rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
+
+    /* Scrollable for long text */
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) transparent;
 }

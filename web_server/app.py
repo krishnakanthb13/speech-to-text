@@ -121,37 +121,43 @@ def upload_audio():
             try:
                 params = json.loads(chat_params_json)
                 
-                # Dynamic Prompt Injection
+                # Dynamic Prompt Injection (AGGRESSIVE MODE)
                 extras = []
                 
                 # Human <-> Robot
                 hr = params.get('humanRobot', 50)
-                if hr < 30: extras.append("Style: Very natural, human-like, emotional.")
-                elif hr > 70: extras.append("Style: Robotic, precise, purely logical, no emotion.")
+                if hr < 40: extras.append("STYLE: You are an emotional human. Use hesitation, feelings, and warmth. Rewrite the text to sound purely human.")
+                elif hr > 60: extras.append("STYLE: You are a ROBOT. Use efficient, cold, calculated logic. NO emotion. Output should be like a log file or code comment.")
                 
                 # Fact <-> Creative
                 fc = params.get('factCreative', 50)
-                if fc < 30: extras.append("Content: Strictly factual, no embellishment.")
-                elif fc > 70: extras.append("Content: Creative, imaginative, artistic flair.")
+                if fc < 40: extras.append("CONTENT: Be brutally factual. Remove any fluff. concise.")
+                elif fc > 60: extras.append("CONTENT: Be highly CREATIVE. Embellish the details. Paint a vivid picture. Use metaphors.")
                 
                 # Funny <-> Rage
                 fr = params.get('funnyRage', 50)
-                if fr < 30: extras.append("Tone: Funny, lighthearted, include jokes.")
-                elif fr > 70: extras.append("Tone: Provocative, controversial, rage-baiting.")
+                if fr < 40: extras.append("TONE: You are a Stand-up Comedian. Make it funny. Insert jokes/puns related to the text.")
+                elif fr > 60: extras.append("TONE: You are ANGRY. The text makes you mad. Rant about it. Use uppercase for checking/emphasis!")
                 
                 # Expert <-> Lame
                 el = params.get('expertLame', 50)
-                if el < 30: extras.append("Complexity: Expert level, technical terminology.")
-                elif el > 70: extras.append("Complexity: Simple, 'lame', ELI5, basic terms.")
+                if el < 40: extras.append("COMPLEXITY: PhD Level. Use jargon, technical complexity, and sophisticated vocabulary.")
+                elif el > 60: extras.append("COMPLEXITY: Explain Like I'm 5 (ELI5). Use simple words. dumb it down.")
                 
                 # Formal <-> Slang
                 fs = params.get('formalSlang', 50)
-                if fs < 30: extras.append("Language: Strict formal/academic.")
-                elif fs > 70: extras.append("Language: Heavy slang, colloquialisms, street talk.")
+                if fs < 40: extras.append("LANGUAGE: Victorian Formal. 'Thou', 'Shall', extremely polite and structured.")
+                elif fs > 60: extras.append("LANGUAGE: Gen-Z / Street Slang. Use 'bruh', 'no cap', 'fr', emojis. Make it trendy.")
                 
                 if extras:
-                    prompt += "\n\nADDITIONAL INSTRUCTIONS:\n" + "\n".join(extras)
+                    # Override base prompt to ensure specific instructions are followed
+                    prompt = "TASK: Rewrite the following transcript completely based on these identity rules:\n"
+                    prompt += "\n".join(extras)
+                    prompt += "\n\nCRITICAL: Do not just fix grammar. You MUST assume the persona described above. Change words, sentence structure, and tone to match."
                     
+                print(f"DEBUG: Chat Params: {params}")
+                print(f"DEBUG: Final Prompt: {prompt}")
+
             except Exception as e:
                 print(f"Error parsing chat params: {e}")
 

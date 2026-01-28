@@ -186,6 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('profile', profileSelect.value);
         formData.append('chatParams', JSON.stringify(chatParams));
 
+        console.log("Sending Audio with Params:", chatParams); // Debug Log
+
         try {
             const res = await fetch('/api/record', {
                 method: 'POST',
@@ -194,21 +196,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             if (data.status === 'success') {
-                statusText.textContent = "Done!";
-                setTimeout(() => statusText.textContent = "Ready to Record", 2000);
                 document.getElementById('last-text-display').textContent = data.refined;
 
-                addHistoryItem(data.entry, true); // Add to top
+                // Copy to Clipboard (Silent)
+                try {
+                    await navigator.clipboard.writeText(data.refined);
+                } catch (err) {
+                    console.error("Clipboard copy failed:", err);
+                }
 
-                // Auto-open history on success if desired, or just let user browse
-                // toggleModal(historyModal, true); 
+                // Update Status Text with Instruction
+                statusText.innerHTML = 'Done! <span style="font-size:0.85em; opacity:0.8; margin-left: 5px;">(Ctrl+V to paste)</span>';
+
+                // Longer timeout to read message
+                setTimeout(() => statusText.textContent = "Ready to Record", 4000);
+
+                fetchHistory(); // Refresh history
             } else {
                 statusText.textContent = "Error";
-                alert("Error: " + data.error);
+                alert("Error: " + (data.error || "Unknown"));
             }
-        } catch (e) {
+        } catch (err) {
+            console.error(err);
             statusText.textContent = "Error";
-            console.error(e);
+            alert("Network Error: " + err.message);
         }
     }
 
@@ -333,17 +344,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // History Logic (Existing)
     async function fetchHistory() {
-        const res = await fetch('/api/history');
-        const history = await res.json();
-        historyList.innerHTML = '';
-        history.forEach(item => addHistoryItem(item, false));
+        try {
+            const res = await fetch('/api/history');
+            const history = await res.json();
+            historyList.innerHTML = '';
 
-        // Restore last transcription from history on load
-        if (history.length > 0) {
-            const latest = history[0]; // API returns newest first
-            const text = latest.refined_text || latest.raw_text;
-            const display = document.getElementById('last-text-display');
-            if (display) display.textContent = text;
+            if (history.length === 0) {
+                historyList.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.7;">
+                        <i class="fa-solid fa-ghost" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+                        <p style="font-style: italic;">It's ghost-town quiet in here... 👻<br>Start yapping to scare them away!</p>
+                    </div>
+                `;
+            } else {
+                history.forEach(item => addHistoryItem(item, false));
+            }
+
+            // Restore last transcription from history on load
+            if (history.length > 0) {
+                const latest = history[0]; // API returns newest first
+                const text = latest.refined_text || latest.raw_text;
+                const display = document.getElementById('last-text-display');
+                if (display) display.textContent = text;
+            }
+        } catch (err) {
+            console.error("Failed to fetch history:", err);
+            historyList.innerHTML = '<div style="padding:1rem; text-align:center;">Could not load history 😓</div>';
         }
     }
 
@@ -363,10 +389,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return (text || '').replace(/[&<>"']/g, function (m) { return map[m]; });
         };
 
+        // Check for Custom Personality
+        let personalityBadge = '';
+        if (item.chat_params) {
+            try {
+                const params = JSON.parse(item.chat_params);
+                const isCustom = Object.values(params).some(val => val < 40 || val > 60);
+                if (isCustom) {
+                    personalityBadge = `<span class="history-profile-badge" style="background: rgba(255, 69, 0, 0.2); color: #ff9f43; margin-left: 5px;"><i class="fa-solid fa-masks-theater"></i> Custom</span>`;
+                }
+            } catch (e) {
+                // Ignore parse error
+            }
+        }
+
         div.innerHTML = `
             <div class="history-header">
-                <span>${escapeHtml(item.timestamp)}</span>
-                <span class="history-profile-badge">${escapeHtml(item.profile)}</span>
+                <div>
+                    <span>${escapeHtml(item.timestamp)}</span>
+                    <span class="history-profile-badge">${escapeHtml(item.profile)}</span>
+                    ${personalityBadge}
+                </div>
             </div>
             <div class="history-content">
                 ${escapeHtml(item.refined_text)}

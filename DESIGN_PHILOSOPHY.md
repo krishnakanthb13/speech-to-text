@@ -33,7 +33,10 @@ The Web Interface extends the tool's utility beyond the desktop. By binding to `
 We prioritize usability for localhost environments. Instead of forcing complex self-signed SSL certificates (which trigger browser warnings), we utilize standard HTTP for `localhost` and local network access. This ensures microphone permissions work seamlessly in modern browsers without scary security alerts.
 
 ### 9. Reduction & Focus
-We believe in removing friction, not just adding features. If a UI element—like a "Show More" toggle—becomes a nuisance or creates visual noise, it is removed in favor of simpler, robust default behaviors (e.g., native scrolling).
+We believe in removing friction, not just adding features. If a UI element—like a "Toast Notification" or "Show More" toggle—becomes a nuisance or creates visual noise, it is removed in favor of simpler, robust default behaviors (e.g., inline status updates, native scrolling).
+
+### 10. Aggressive Alignment
+When a user asks for a personality change (e.g., "Make it funny" or "Make it formal"), subtle nudges are insufficient. The system employs **Aggressive Prompt Injection**, using strong, directive language to force the LLM into a specific persona. We prefer over-correction to ambiguity—if you ask for a "Roast", you should get a roast, not just a slightly snarky comment.
 
 ## Trade-offs & Constraints
 - **Connectivity**: Requires an active internet connection to communicate with Groq.

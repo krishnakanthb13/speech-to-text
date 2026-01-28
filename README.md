@@ -18,10 +18,10 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 
 - 🚀 **Extreme Speed**: Powered by Groq's Whisper-large-v3-turbo.
 - 🌐 **Modern Web UI**: A beautiful, glassmorphism-styled web interface for recording and management.
-- 📜 **Full History Management**: View, Copy, and **Delete** past transcriptions via the Web UI.
+- 📜 **Enhanced History**: View, Copy, and Delete past transcriptions. Includes **Custom Personality Badges** 🎭 and intelligent empty states 👻.
 - 🧠 **Context-Aware Refinement**: Optional AI layer to fix grammar, punctuation, and "ums/ahs".
-- 🧑 **AI Personality Engine**: Customize your assistant with sliders for Humor, Creativity, Professionalism, and Slang. Includes a **Reset** button to quickly restore defaults.
-- 📜 **Smart Prompt Display**: View the active system prompt in a clean, scrollable interface without clutter.
+- 🎭 **Aggressive AI Personalities**: A powerful engine that completely transforms your text style. From "Robotic Log Files" to "Gen-Z Slang" or "Rage Rants" – the AI doesn't just tweak, it rewrites.
+- 📜 **Smart Prompt Display**: View the active system prompt in a clean, scrollable interface.
 - 📥 **System Tray Icon**: Runs in the background with a quick-access menu (Desktop).
 - 🔐 **Secure & Local**: Web server runs on HTTP/Localhost for maximum privacy and browser compatibility.
 - 🏁 **Windows Auto-start**: Optional setting to launch automatically on login.
