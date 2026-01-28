@@ -1,13 +1,10 @@
-
 import os
 import json
-import logging
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 from groq import Groq
 from dotenv import load_dotenv
-import werkzeug
 
 # Setup paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -117,6 +114,47 @@ def upload_audio():
     
     if config.get('refinement_enabled', True):
         prompt = profile['prompt'] if profile else "Clean up this text."
+        
+        # Parse Chat Params
+        chat_params_json = request.form.get('chatParams')
+        if chat_params_json:
+            try:
+                params = json.loads(chat_params_json)
+                
+                # Dynamic Prompt Injection
+                extras = []
+                
+                # Human <-> Robot
+                hr = params.get('humanRobot', 50)
+                if hr < 30: extras.append("Style: Very natural, human-like, emotional.")
+                elif hr > 70: extras.append("Style: Robotic, precise, purely logical, no emotion.")
+                
+                # Fact <-> Creative
+                fc = params.get('factCreative', 50)
+                if fc < 30: extras.append("Content: Strictly factual, no embellishment.")
+                elif fc > 70: extras.append("Content: Creative, imaginative, artistic flair.")
+                
+                # Funny <-> Rage
+                fr = params.get('funnyRage', 50)
+                if fr < 30: extras.append("Tone: Funny, lighthearted, include jokes.")
+                elif fr > 70: extras.append("Tone: Provocative, controversial, rage-baiting.")
+                
+                # Expert <-> Lame
+                el = params.get('expertLame', 50)
+                if el < 30: extras.append("Complexity: Expert level, technical terminology.")
+                elif el > 70: extras.append("Complexity: Simple, 'lame', ELI5, basic terms.")
+                
+                # Formal <-> Slang
+                fs = params.get('formalSlang', 50)
+                if fs < 30: extras.append("Language: Strict formal/academic.")
+                elif fs > 70: extras.append("Language: Heavy slang, colloquialisms, street talk.")
+                
+                if extras:
+                    prompt += "\n\nADDITIONAL INSTRUCTIONS:\n" + "\n".join(extras)
+                    
+            except Exception as e:
+                print(f"Error parsing chat params: {e}")
+
         try:
             completion = client.chat.completions.create(
                 model=config.get('refinement_model', 'llama-3.3-70b-versatile'),
@@ -133,6 +171,7 @@ def upload_audio():
     log_entry = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "profile": profile_name,
+        "chat_params": request.form.get('chatParams'), # Log params too
         "raw_text": raw_text,
         "refined_text": refined_text,
         "stt_model": config.get('stt_model'),
@@ -195,9 +234,9 @@ if __name__ == '__main__':
         webbrowser.open_new("http://localhost:8091")
 
     print("===========================================")
-    print("    🚀 Starting Production Server...")
-    print("    👉 Open: http://localhost:8091")
-    print("    👉 Close: Ctrl + C")
+    print("    [+] Starting Production Server...")
+    print("    --> Open: http://localhost:8091")
+    print("    --> Close: Ctrl + C")
     print("===========================================")
 
     # Open browser after delay

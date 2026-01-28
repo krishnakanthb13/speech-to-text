@@ -60,6 +60,14 @@ cls
 echo ===========================================
 echo       🎙️  Handy-Groq Web Interface
 echo ===========================================
+
+:: Cleanup existing port 8091
+echo [i] Checking for existing servers on port 8091...
+for /f "tokens=5" %%a in ('netstat -aon ^| find ":8091" ^| find "LISTENING"') do (
+    echo [!] Killing PID %%a...
+    taskkill /F /PID %%a >nul 2>nul
+)
+
 echo Open your browser to: http://localhost:8091
 echo ===========================================
 cd web_server

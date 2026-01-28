@@ -9,7 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/style.css?v=7">
 </head>
 
 <body>
@@ -17,6 +18,8 @@
         <header>
             <h1><i class="fa-solid fa-microphone-lines"></i> Handy Groq</h1>
             <div class="header-controls">
+                <button id="chat-params-btn" class="icon-btn" title="AI Personality"><i
+                        class="fa-solid fa-wand-magic-sparkles"></i></button>
                 <button id="history-btn" class="icon-btn" title="History"><i
                         class="fa-solid fa-clock-rotate-left"></i></button>
                 <button id="settings-btn" class="icon-btn" title="Settings"><i class="fa-solid fa-gear"></i></button>
@@ -30,7 +33,23 @@
                     <select id="profile-select">
                         <!-- Populated by JS -->
                     </select>
-                    <div class="prompt-preview" id="prompt-display"></div>
+
+                    <div class="prompt-container">
+                        <div class="prompt-preview" id="prompt-display"></div>
+                    </div>
+
+                    <div class="divider-small"></div>
+
+                    <!-- Last Transcription Collapsible -->
+                    <div class="last-transcription-section">
+                        <button id="toggle-last-transcription" class="collapsible-header">
+                            <span><i class="fa-solid fa-clock-rotate-left"></i> Last Transcription</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </button>
+                        <div class="collapsible-content hidden" id="last-transcription-content">
+                            <div class="last-text-content" id="last-text-display">No transcription yet...</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mic-container">
@@ -100,7 +119,83 @@
                 </div>
             </div>
         </div>
-        <script src="/static/js/main.js"></script>
+
+        <!-- Chat Params Modal -->
+        <div id="chat-params-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI Personality</h2>
+                    <button class="close-modal close-chat-params"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Presets -->
+                    <div class="presets-container">
+                        <label>Quick Presets</label>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" data-preset="friend">Bestie 👯</button>
+                            <button class="preset-btn" data-preset="professional">Pro 👔</button>
+                            <button class="preset-btn" data-preset="lover">Lover ❤️</button>
+                            <button class="preset-btn" data-preset="roast">Roast 🔥</button>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Sliders -->
+                    <div class="slider-group-chat">
+                        <div class="slider-header-chat">
+                            <span>Human 🙋‍♂️</span>
+                            <span class="slider-val" id="val-human-robot">50%</span>
+                            <span>🤖 Robot</span>
+                        </div>
+                        <input type="range" class="styled-slider" id="slider-human-robot" min="0" max="100" value="50">
+                    </div>
+
+                    <div class="slider-group-chat">
+                        <div class="slider-header-chat">
+                            <span>Factual 📚</span>
+                            <span class="slider-val" id="val-fact-creative">50%</span>
+                            <span>🎨 Creative</span>
+                        </div>
+                        <input type="range" class="styled-slider" id="slider-fact-creative" min="0" max="100"
+                            value="50">
+                    </div>
+
+                    <div class="slider-group-chat">
+                        <div class="slider-header-chat">
+                            <span>Funny 😂</span>
+                            <span class="slider-val" id="val-funny-rage">50%</span>
+                            <span>🤬 Rage</span>
+                        </div>
+                        <input type="range" class="styled-slider" id="slider-funny-rage" min="0" max="100" value="50">
+                    </div>
+
+                    <div class="slider-group-chat">
+                        <div class="slider-header-chat">
+                            <span>Expert 🎓</span>
+                            <span class="slider-val" id="val-expert-lame">50%</span>
+                            <span>🤡 Lame</span>
+                        </div>
+                        <input type="range" class="styled-slider" id="slider-expert-lame" min="0" max="100" value="50">
+                    </div>
+
+                    <div class="slider-group-chat">
+                        <div class="slider-header-chat">
+                            <span>Formal 🏛️</span>
+                            <span class="slider-val" id="val-formal-slang">50%</span>
+                            <span>🤙 Slang</span>
+                        </div>
+                        <input type="range" class="styled-slider" id="slider-formal-slang" min="0" max="100" value="50">
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; gap: 1rem;">
+                    <button id="reset-chat-params" class="secondary-btn" title="Reset to Defaults"><i
+                            class="fa-solid fa-rotate-left"></i> Reset</button>
+                    <button id="save-chat-params" class="primary-btn" style="margin-top: 0;">Apply Personality</button>
+                </div>
+            </div>
+        </div>
+        <script src="/static/js/main.js?v=7"></script>
 </body>
 
 </html>

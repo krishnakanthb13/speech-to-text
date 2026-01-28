@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('audio', blob, 'recording.webm');
         formData.append('profile', profileSelect.value);
+        formData.append('chatParams', JSON.stringify(chatParams));
 
         try {
             const res = await fetch('/api/record', {
@@ -195,6 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'success') {
                 statusText.textContent = "Done!";
                 setTimeout(() => statusText.textContent = "Ready to Record", 2000);
+                document.getElementById('last-text-display').textContent = data.refined;
+
                 addHistoryItem(data.entry, true); // Add to top
 
                 // Auto-open history on success if desired, or just let user browse
@@ -209,12 +212,139 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 5. History
+    // 5. Chat Parameters Logic
+    const chatParamsModal = document.getElementById('chat-params-modal');
+    const chatParamsBtn = document.getElementById('chat-params-btn');
+    const closeChatParamsBtn = document.querySelector('.close-chat-params');
+    const saveChatParamsBtn = document.getElementById('save-chat-params');
+    const resetChatParamsBtn = document.getElementById('reset-chat-params');
+
+    let chatParams = {
+        humanRobot: 50,
+        factCreative: 50,
+        funnyRage: 50,
+        expertLame: 50,
+        formalSlang: 50
+    };
+
+    // Sliders
+    const sliders = {
+        humanRobot: { el: document.getElementById('slider-human-robot'), val: document.getElementById('val-human-robot') },
+        factCreative: { el: document.getElementById('slider-fact-creative'), val: document.getElementById('val-fact-creative') },
+        funnyRage: { el: document.getElementById('slider-funny-rage'), val: document.getElementById('val-funny-rage') },
+        expertLame: { el: document.getElementById('slider-expert-lame'), val: document.getElementById('val-expert-lame') },
+        formalSlang: { el: document.getElementById('slider-formal-slang'), val: document.getElementById('val-formal-slang') }
+    };
+
+    // Initialize Sliders
+    Object.keys(sliders).forEach(key => {
+        const s = sliders[key];
+        s.el.addEventListener('input', (e) => {
+            chatParams[key] = parseInt(e.target.value);
+            s.val.textContent = e.target.value + '%';
+        });
+    });
+
+    // Reset Logic
+    if (resetChatParamsBtn) {
+        resetChatParamsBtn.addEventListener('click', () => {
+            const defaults = {
+                humanRobot: 50,
+                factCreative: 50,
+                funnyRage: 50,
+                expertLame: 50,
+                formalSlang: 50
+            };
+            chatParams = { ...defaults };
+            Object.keys(sliders).forEach(key => {
+                const s = sliders[key];
+                if (s && s.el) {
+                    s.el.value = defaults[key];
+                    s.val.textContent = defaults[key] + '%';
+                }
+            });
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        });
+    }
+
+    // Presets
+    const presets = {
+        friend: { humanRobot: 10, factCreative: 80, funnyRage: 20, expertLame: 80, formalSlang: 90 }, // Very human, creative, funny, not expert, slangy
+        professional: { humanRobot: 40, factCreative: 20, funnyRage: 50, expertLame: 10, formalSlang: 10 }, // Balanced, factual, NEUTRAL tone, expert, formal
+        lover: { humanRobot: 0, factCreative: 90, funnyRage: 10, expertLame: 90, formalSlang: 50 }, // Total human, creative, sweet, balanced language
+        roast: { humanRobot: 30, factCreative: 100, funnyRage: 100, expertLame: 0, formalSlang: 100 } // Sassy
+    };
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const presetName = btn.dataset.preset;
+            const vals = presets[presetName];
+            if (vals) {
+                // Update State
+                chatParams = { ...vals };
+                // Update UI
+                Object.keys(sliders).forEach(key => {
+                    const s = sliders[key];
+                    if (s && s.el) {
+                        s.el.value = vals[key];
+                        s.val.textContent = vals[key] + '%';
+                    }
+                });
+
+                // Visual feedback
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+        });
+    });
+
+    // Modal Handling
+    if (chatParamsBtn) {
+        chatParamsBtn.addEventListener('click', () => toggleModal(chatParamsModal, true));
+    }
+    if (closeChatParamsBtn) {
+        closeChatParamsBtn.addEventListener('click', () => toggleModal(chatParamsModal, false));
+    }
+
+    window.addEventListener('click', (e) => {
+        if (e.target === chatParamsModal) toggleModal(chatParamsModal, false);
+    });
+
+    if (saveChatParamsBtn) {
+        saveChatParamsBtn.addEventListener('click', () => {
+            // Just close, variables are already updated on input
+            toggleModal(chatParamsModal, false);
+        });
+    }
+
+    // UI Toggles (Prompt & Last Transcription)
+    // promptDisplay already declared at top
+    // Toggle button removed per user request
+
+    const toggleLastTransBtn = document.getElementById('toggle-last-transcription');
+    const lastTransContent = document.getElementById('last-transcription-content');
+
+    if (toggleLastTransBtn && lastTransContent) {
+        toggleLastTransBtn.addEventListener('click', () => {
+            lastTransContent.classList.toggle('hidden');
+            toggleLastTransBtn.classList.toggle('active');
+        });
+    }
+
+    // History Logic (Existing)
     async function fetchHistory() {
         const res = await fetch('/api/history');
         const history = await res.json();
         historyList.innerHTML = '';
         history.forEach(item => addHistoryItem(item, false));
+
+        // Restore last transcription from history on load
+        if (history.length > 0) {
+            const latest = history[0]; // API returns newest first
+            const text = latest.refined_text || latest.raw_text;
+            const display = document.getElementById('last-text-display');
+            if (display) display.textContent = text;
+        }
     }
 
     function addHistoryItem(item, prepend) {

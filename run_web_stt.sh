@@ -55,6 +55,13 @@ clear
 echo "==========================================="
 echo "      🎙️  Handy-Groq Web Interface"
 echo "==========================================="
+
+# Cleanup Port 8091
+if lsof -i :8091 -t >/dev/null 2>&1; then
+    echo "[!] Killing existing server on port 8091..."
+    kill -9 $(lsof -i :8091 -t) 2>/dev/null
+fi
+
 echo "  Open your browser to: http://localhost:8091"
 echo "==========================================="
 
