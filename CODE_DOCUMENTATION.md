@@ -9,6 +9,8 @@
 - `settings_manager.py`: Interactive CLI for managing configuration and Windows auto-start.
 - `run_groq_stt.bat`: Windows batch file for easy launching and management.
 - `run_groq_stt.sh`: Unix/macOS shell script for cross-platform launching.
+- `run_web_stt.bat`: (New) Starts the web server after automatically killing any zombie processes on port 8091.
+- `run_web_stt.sh`: (New) Unix equivalent for starting the web server with port cleanup.
 - `requirements.txt`: List of Python dependencies (including `pystray`).
 - `.env`: Stores the `GROQ_API_KEY`. Automatically created from `.env.example` by launchers if missing.
 - **`web_server/`**: (New) Directory containing the Flask web application.

@@ -20,6 +20,8 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 - 🌐 **Modern Web UI**: A beautiful, glassmorphism-styled web interface for recording and management.
 - 📜 **Full History Management**: View, Copy, and **Delete** past transcriptions via the Web UI.
 - 🧠 **Context-Aware Refinement**: Optional AI layer to fix grammar, punctuation, and "ums/ahs".
+- 🧑 **AI Personality Engine**: Customize your assistant with sliders for Humor, Creativity, Professionalism, and Slang. Includes a **Reset** button to quickly restore defaults.
+- 📜 **Smart Prompt Display**: View the active system prompt in a clean, scrollable interface without clutter.
 - 📥 **System Tray Icon**: Runs in the background with a quick-access menu (Desktop).
 - 🔐 **Secure & Local**: Web server runs on HTTP/Localhost for maximum privacy and browser compatibility.
 - 🏁 **Windows Auto-start**: Optional setting to launch automatically on login.
@@ -58,8 +60,8 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 
 ### 🌐 Web Interface (New!)
 A beautiful, modern web UI for dictation, history management, and configuration.
-- **Windows**: Double-click **`run_web_stt.bat`**.
-- **Linux/macOS**: Run **`./run_web_stt.sh`**.
+- **Windows**: Double-click **`run_web_stt.bat`**. (Automatically cleans up port 8091 before starting).
+- **Linux/macOS**: Run **`./run_web_stt.sh`**. (Automatically cleans up port 8091 before starting).
 - **Access**: Open `http://localhost:8091` in your browser. (Also accessible via local network IP).
 
 ### ⌨️ Contextual Profiles (Desktop)

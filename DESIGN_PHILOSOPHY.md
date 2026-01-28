@@ -32,6 +32,9 @@ The Web Interface extends the tool's utility beyond the desktop. By binding to `
 ### 8. Pragmatic Security
 We prioritize usability for localhost environments. Instead of forcing complex self-signed SSL certificates (which trigger browser warnings), we utilize standard HTTP for `localhost` and local network access. This ensures microphone permissions work seamlessly in modern browsers without scary security alerts.
 
+### 9. Reduction & Focus
+We believe in removing friction, not just adding features. If a UI element—like a "Show More" toggle—becomes a nuisance or creates visual noise, it is removed in favor of simpler, robust default behaviors (e.g., native scrolling).
+
 ## Trade-offs & Constraints
 - **Connectivity**: Requires an active internet connection to communicate with Groq.
 - **Platform Focus**: While cross-platform, features like Auto-start and DPI awareness are specifically optimized for the Windows ecosystem.
