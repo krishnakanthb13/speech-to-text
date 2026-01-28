@@ -13,10 +13,16 @@ if %errorlevel% neq 0 (
 
 :: 2. .env Check
 if not exist .env (
-    echo [!] ERROR: .env file not found! 
-    echo Please copy .env.example to .env and add your GROQ_API_KEY.
-    pause
-    exit /b
+    if exist .env.example (
+        echo [i] .env file not found. Creating from .env.example...
+        copy .env.example .env >nul
+        echo [!] Please open .env and add your GROQ_API_KEY.
+        pause
+    ) else (
+        echo [!] ERROR: .env and .env.example not found!
+        pause
+        exit /b
+    )
 )
 
 :: 3. Environment Check

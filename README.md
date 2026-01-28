@@ -42,8 +42,8 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
    ```
 
 2. **Configure API Key**:
-   - Rename `.env.example` to `.env`.
-   - Add your [Groq API Key](https://console.groq.com/keys).
+   - The launcher will automatically create a `.env` file from `.env.example` if it doesn't exist.
+   - Simply open the `.env` file and add your [Groq API Key](https://console.groq.com/keys).
 
 3. **Get the Visual Widget (Optional but Recommended)**:
    - Ensure `tkinter` is installed (standard with Python on Windows).

@@ -6,6 +6,19 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
+# 1.5 .env Check
+if [ ! -f .env ]; then
+    if [ -f .env.example ]; then
+        echo "[i] .env file not found. Creating from .env.example..."
+        cp .env.example .env
+        echo "[!] Please open .env and add your GROQ_API_KEY."
+        read -p "Press Enter to continue..."
+    else
+        echo "[!] Error: .env and .env.example not found."
+        exit 1
+    fi
+fi
+
 # 2. Environment Check
 USE_VENV=0
 # Check for key web server dependencies

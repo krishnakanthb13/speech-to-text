@@ -7,7 +7,7 @@
 
 ## 1. Secrets & Credentials (OWASP #2)
 - [x] **API Keys**: No hardcoded API keys found in source code. `GROQ_API_KEY` is correctly loaded from `.env`.
-- [x] **.env Safety**: `.env` file exists and is correctly listed in `.gitignore`.
+- [x] **.env Safety**: `.env` and `.env.example` files exist. `.env` is correctly listed in `.gitignore`, while `.env.example` contains only placeholders.
 
 ## 2. Injection Prevention (OWASP #1)
 - [x] **SQL Injection**: Not applicable (No database used, JSON file storage).

@@ -21,9 +21,15 @@ if ! command -v $PYTHON_CMD &> /dev/null; then
 fi
 
 if [ ! -f .env ]; then
-    echo "[!] Error: .env file not found."
-    echo "Please create .env and add your GROQ_API_KEY."
-    exit 1
+    if [ -f .env.example ]; then
+        echo "[i] .env file not found. Creating from .env.example..."
+        cp .env.example .env
+        echo "[!] Please open .env and add your GROQ_API_KEY."
+        read -p "Press Enter to continue..."
+    else
+        echo "[!] Error: .env and .env.example not found."
+        exit 1
+    fi
 fi
 
 # 2. Environment Check

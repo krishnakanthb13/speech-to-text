@@ -10,7 +10,7 @@
 - `run_groq_stt.bat`: Windows batch file for easy launching and management.
 - `run_groq_stt.sh`: Unix/macOS shell script for cross-platform launching.
 - `requirements.txt`: List of Python dependencies (including `pystray`).
-- `.env`: (User provided) Stores the `GROQ_API_KEY`.
+- `.env`: Stores the `GROQ_API_KEY`. Automatically created from `.env.example` by launchers if missing.
 - **`web_server/`**: (New) Directory containing the Flask web application.
     - `app.py`: Flask backend served by Waitress.
     - `static/`: JS and CSS assets.

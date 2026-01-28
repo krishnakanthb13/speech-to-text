@@ -34,10 +34,7 @@ First off, thank you for considering contributing to Handy-Groq STT! It's people
    ```
 
 3. **Configure Environment**:
-   Create a `.env` file and add your `GROQ_API_KEY`:
-   ```env
-   GROQ_API_KEY=your_key_here
-   ```
+   The launcher scripts will automatically create a `.env` file from `.env.example` if it's missing. Open `.env` and add your `GROQ_API_KEY`.
 
 4. **Run the app**:
    ```bash
