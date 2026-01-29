@@ -38,6 +38,13 @@ We believe in removing friction, not just adding features. If a UI element—lik
 ### 10. Aggressive Alignment
 When a user asks for a personality change (e.g., "Make it funny" or "Make it formal"), subtle nudges are insufficient. The system employs **Aggressive Prompt Injection**, using strong, directive language to force the LLM into a specific persona. We prefer over-correction to ambiguity—if you ask for a "Roast", you should get a roast, not just a slightly snarky comment.
 
+### 11. Defensive Data Handling
+User data must never be corrupted. History deletion uses **atomic file operations**—writing to a temporary file first and then performing an atomic rename. This ensures files are never left in a partially written state, even if a crash occurs mid-operation. Frontend state (like personality sliders) is validated on load and safely falls back to defaults when corrupted.
+
+### 12. Rate Limiting & Abuse Prevention
+Public-facing endpoints are protected by **rate limiting** to prevent accidental infinite loops or malicious abuse. We use IP-based tracking to enforce fair usage limits (15 requests/minute) without requiring authentication.
+
+
 ## Trade-offs & Constraints
 - **Connectivity**: Requires an active internet connection to communicate with Groq.
 - **Platform Focus**: While cross-platform, features like Auto-start and DPI awareness are specifically optimized for the Windows ecosystem.

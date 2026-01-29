@@ -230,13 +230,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveChatParamsBtn = document.getElementById('save-chat-params');
     const resetChatParamsBtn = document.getElementById('reset-chat-params');
 
-    let chatParams = {
+    // Load from localStorage or use defaults
+    const defaultChatParams = {
         humanRobot: 50,
         factCreative: 50,
         funnyRage: 50,
         expertLame: 50,
         formalSlang: 50
     };
+
+    let chatParams = { ...defaultChatParams };
+    
+    try {
+        const stored = localStorage.getItem('chatParams');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // Validate stored values
+            const validKeys = Object.keys(defaultChatParams);
+            let isValid = true;
+            for (const key of validKeys) {
+                if (typeof parsed[key] !== 'number' || parsed[key] < 0 || parsed[key] > 100) {
+                    isValid = false;
+                    break;
+                }
+            }
+            if (isValid) {
+                chatParams = parsed;
+            }
+        }
+    } catch (e) {
+        console.error("Failed to load chatParams from localStorage:", e);
+    }
+
+    // Function to save chatParams to localStorage
+    function saveChatParams() {
+        try {
+            localStorage.setItem('chatParams', JSON.stringify(chatParams));
+        } catch (e) {
+            console.error("Failed to save chatParams to localStorage:", e);
+        }
+    }
+
+    // Function to update personality button indicator
+    function updatePersonalityIndicator() {
+        if (!chatParamsBtn) return;
+        const isCustom = Object.values(chatParams).some(v => v < 40 || v > 60);
+        chatParamsBtn.classList.toggle('active-personality', isCustom);
+    }
 
     // Sliders
     const sliders = {
@@ -247,34 +287,40 @@ document.addEventListener('DOMContentLoaded', () => {
         formalSlang: { el: document.getElementById('slider-formal-slang'), val: document.getElementById('val-formal-slang') }
     };
 
-    // Initialize Sliders
+    // Initialize Sliders with stored values
     Object.keys(sliders).forEach(key => {
         const s = sliders[key];
-        s.el.addEventListener('input', (e) => {
-            chatParams[key] = parseInt(e.target.value);
-            s.val.textContent = e.target.value + '%';
-        });
+        if (s && s.el) {
+            // Set initial value from localStorage
+            s.el.value = chatParams[key];
+            s.val.textContent = chatParams[key] + '%';
+            
+            s.el.addEventListener('input', (e) => {
+                chatParams[key] = parseInt(e.target.value);
+                s.val.textContent = e.target.value + '%';
+                saveChatParams();
+                updatePersonalityIndicator();
+            });
+        }
     });
+
+    // Initial indicator update
+    updatePersonalityIndicator();
 
     // Reset Logic
     if (resetChatParamsBtn) {
         resetChatParamsBtn.addEventListener('click', () => {
-            const defaults = {
-                humanRobot: 50,
-                factCreative: 50,
-                funnyRage: 50,
-                expertLame: 50,
-                formalSlang: 50
-            };
-            chatParams = { ...defaults };
+            chatParams = { ...defaultChatParams };
             Object.keys(sliders).forEach(key => {
                 const s = sliders[key];
                 if (s && s.el) {
-                    s.el.value = defaults[key];
-                    s.val.textContent = defaults[key] + '%';
+                    s.el.value = defaultChatParams[key];
+                    s.val.textContent = defaultChatParams[key] + '%';
                 }
             });
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            saveChatParams();
+            updatePersonalityIndicator();
         });
     }
 
@@ -305,6 +351,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Visual feedback
                 document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                
+                // Save and update indicator
+                saveChatParams();
+                updatePersonalityIndicator();
             }
         });
     });

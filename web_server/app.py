@@ -1,8 +1,12 @@
 import os
 import json
+import shutil
+import tempfile
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -18,6 +22,14 @@ load_dotenv(ENV_PATH)
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize Flask-Limiter with file-based storage
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["15 per minute"],
+    storage_uri="memory://"  # Use memory storage (resets on restart) - change to "redis://" or "memcached://" for production
+)
 
 # Initialize Groq
 api_key = os.getenv("GROQ_API_KEY")
@@ -95,6 +107,7 @@ def get_history():
         return jsonify([])
 
 @app.route('/api/record', methods=['POST'])
+@limiter.limit("15 per minute")
 def upload_audio():
     if 'audio' not in request.files:
         return jsonify({"error": "No audio file"}), 400
@@ -135,6 +148,14 @@ def upload_audio():
         if chat_params_json:
             try:
                 params = json.loads(chat_params_json)
+                
+                # Validate chat params - must be integers between 0 and 100
+                valid_keys = ['humanRobot', 'factCreative', 'funnyRage', 'expertLame', 'formalSlang']
+                for key, value in params.items():
+                    if key not in valid_keys:
+                        return jsonify({"error": f"Invalid parameter: {key}"}), 400
+                    if not isinstance(value, (int, float)) or not (0 <= value <= 100):
+                        return jsonify({"error": f"Invalid value for {key}: must be between 0 and 100"}), 400
                 
                 # Dynamic Prompt Injection (AGGRESSIVE MODE)
                 extras = []
@@ -223,19 +244,31 @@ def delete_history_item():
         with open(HISTORY_PATH, "r", encoding='utf-8') as f:
             lines = f.readlines()
         
-        # Rewrite file excluding the matching item
+        # Rewrite file excluding the matching item using atomic write
         # We assume one entry per line as enforced by append_history
         deleted = False
-        with open(HISTORY_PATH, "w", encoding='utf-8') as f:
-            for line in lines:
-                try:
-                    entry = json.loads(line)
-                    if entry.get("timestamp") == timestamp_to_delete:
-                        deleted = True
-                        continue # Skip writing this line
-                    f.write(line)
-                except json.JSONDecodeError:
-                    f.write(line) # Preserve malformed lines just in case
+        
+        # Create temp file in the same directory for atomic rename
+        fd, temp_path = tempfile.mkstemp(dir=os.path.dirname(HISTORY_PATH))
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                for line in lines:
+                    try:
+                        entry = json.loads(line)
+                        if entry.get("timestamp") == timestamp_to_delete:
+                            deleted = True
+                            continue # Skip writing this line
+                        f.write(line)
+                    except json.JSONDecodeError:
+                        f.write(line) # Preserve malformed lines just in case
+            
+            # Atomic replace
+            shutil.move(temp_path, HISTORY_PATH)
+        except Exception:
+            # Clean up temp file if something went wrong
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise
         
         if deleted:
             return jsonify({"status": "success"})

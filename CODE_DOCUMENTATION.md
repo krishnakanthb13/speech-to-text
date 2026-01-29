@@ -53,11 +53,16 @@ The project now includes a complementary Web Server for managing history and mob
 
 ### Web Server Logic (`app.py`)
 - **Aggressive Prompt Injection**: The backend now employs an "Aggressive Mode" for personality parameters. If a user deviates from defaults (40-60 range), the system **overrides** the base prompt with rigid directives (e.g., "You are a ROBOT", "Be ANGRY"), ensuring the LLM radically transforms the text style rather than just refining it.
+- **Parameter Validation**: All personality parameters are strictly validated—only allowed keys (`humanRobot`, `factCreative`, `funnyRage`, `expertLame`, `formalSlang`) are accepted, and values must be numbers between 0-100. Invalid requests return a 400 error.
+- **Rate Limiting**: Flask-Limiter enforces a global limit of 15 requests per minute using IP-based tracking via `get_remote_address`.
+- **Atomic History Deletion**: History deletion uses `tempfile.mkstemp()` and `shutil.move()` for crash-safe atomic writes, preventing corrupted history files.
 - **Debug Logging**: Explicit `print` statements track the received `chatParams` and the final generated prompt for easy terminal debugging.
 
 ### Frontend Logic (`main.js`)
 - **Auto-Clipboard**: Successful transcriptions are immediately written to the `navigator.clipboard` API.
 - **Direct Feedback**: Replaced complex toast notifications with a simple, high-visibility status updates (e.g., "Done! (Ctrl+V to paste)") that persist for 4 seconds.
+- **Personality Persistence**: AI personality sliders are saved to `localStorage` on every change (slider, preset, reset). Values are validated on load—non-numbers or out-of-range values fall back to defaults.
+- **Personality Indicator**: The AI Personality button gains an orange glow and border when any slider is outside the 40-60 default range, updating in real time.
 - **History Management**:
   - **Custom Badges**: Parses stored `chat_params` to dynamically append a "🎭 Custom" badge to history items.
   - **Empty States**: Displays a playful "Ghost" empty state when no history is found.
@@ -73,4 +78,4 @@ The project now includes a complementary Web Server for managing history and mob
 
 - **Core**: `groq`, `numpy`, `scipy`.
 - **Desktop**: `pystray`, `sounddevice`, `pynput`, `pyperclip`, `tkinter` (std lib).
-- **Web**: `flask`, `flask-cors`, `waitress`, `python-dotenv`.
+- **Web**: `flask`, `flask-cors`, `flask-limiter`, `waitress`, `python-dotenv`.

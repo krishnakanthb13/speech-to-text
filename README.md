@@ -21,7 +21,10 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 - 📜 **Enhanced History**: View, Copy, and Delete past transcriptions. Includes **Custom Personality Badges** 🎭 and intelligent empty states 👻.
 - 🧠 **Context-Aware Refinement**: Optional AI layer to fix grammar, punctuation, and "ums/ahs".
 - 🎭 **Aggressive AI Personalities**: A powerful engine that completely transforms your text style. From "Robotic Log Files" to "Gen-Z Slang" or "Rage Rants" – the AI doesn't just tweak, it rewrites.
+- 💾 **Personality Persistence**: AI personality sliders are saved to `localStorage` and restored on page load with validation.
+- 🟠 **Visual Personality Indicator**: The AI Personality button glows orange when customized outside the default range.
 - 📜 **Smart Prompt Display**: View the active system prompt in a clean, scrollable interface.
+- 🛡️ **Rate Limiting**: Built-in protection against abuse with Flask-Limiter (15 requests/minute).
 - 📥 **System Tray Icon**: Runs in the background with a quick-access menu (Desktop).
 - 🔐 **Secure & Local**: Web server runs on HTTP/Localhost for maximum privacy and browser compatibility.
 - 🏁 **Windows Auto-start**: Optional setting to launch automatically on login.
