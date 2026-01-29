@@ -60,24 +60,39 @@ def handle_config():
 @app.route('/api/history', methods=['GET'])
 def get_history():
     history = []
-    if os.path.exists(HISTORY_PATH):
-        try:
-            with open(HISTORY_PATH, "r", encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        try:
-                            # Sometimes logs might have timestamps prefix if formatter changed, 
-                            # but main.py uses strictly json.dumps in message.
-                            # However, the formatter was '%(message)s', so it should be pure JSON.
-                            entry = json.loads(line)
-                            history.append(entry)
-                        except json.JSONDecodeError:
-                            pass
-        except Exception as e:
-            print(f"Error reading history: {e}")
-    # Return newest 50 entries
-    return jsonify(history[-50:][::-1])
+    if not os.path.exists(HISTORY_PATH):
+        return jsonify([])
+
+    try:
+        # Efficiently read the last 50 lines by seeking from the end
+        with open(HISTORY_PATH, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            pos = f.tell()
+            buffer = b""
+            lines = []
+            
+            # Read backwards in 4KB chunks until we have enough lines
+            while pos > 0 and len(lines) <= 50:
+                chunk_size = min(pos, 4096)
+                pos -= chunk_size
+                f.seek(pos)
+                chunk = f.read(chunk_size)
+                buffer = chunk + buffer
+                lines = buffer.splitlines()
+            
+            # Process the last 50 lines (newest first)
+            for line_bytes in reversed(lines[-50:]):
+                line = line_bytes.decode('utf-8', errors='ignore').strip()
+                if line:
+                    try:
+                        history.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        pass
+                        
+        return jsonify(history)
+    except Exception as e:
+        print(f"Error reading history: {e}")
+        return jsonify([])
 
 @app.route('/api/record', methods=['POST'])
 def upload_audio():
