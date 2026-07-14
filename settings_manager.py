@@ -82,11 +82,12 @@ def settings_menu():
         print(f" 5. Action Mode        : {config.get('action_mode', 'type').upper()}")
         print(f" 6. Log History        : {'✅ Yes' if config.get('log_history', True) else '❌ No'}")
         print(f" 7. Auto-start (Win)   : {'✅ Yes' if is_autostart_enabled() else '❌ No'}")
-        print(" 8. Edit Profiles (Hotkeys/Prompts)")
+        print(f" 8. Edit Profiles (Hotkeys/Prompts)")
+        print(f" 9. Temperature        : {config.get('temperature', 0.7)}")
         print(" 0. Back to Main Menu")
         print("-" * 55)
-        
-        choice = input("Select an option (0-8): ")
+
+        choice = input("Select an option (0-9): ")
         
         if choice == "1":
             clear_screen()
@@ -127,6 +128,18 @@ def settings_menu():
         elif choice == "8":
             edit_profiles(config)
             continue
+        elif choice == "9":
+            current = config.get('temperature', 0.7)
+            new_temp = input(f"Temperature (0.0-2.0, current={current}): ")
+            try:
+                t = float(new_temp)
+                if 0.0 <= t <= 2.0:
+                    config['temperature'] = t
+                else:
+                    print("Must be between 0.0 and 2.0")
+                    continue
+            except ValueError:
+                continue
         elif choice == "0":
             break
         else:
@@ -179,9 +192,20 @@ def edit_profiles(config):
                         if confirm.lower() == 'y':
                             p['hotkey'] = parts
 
-                print(f"\nCurrent Prompt: {p['prompt']}")
+                print(f"Current Prompt: {p['prompt']}")
                 new_prompt = input("Enter new prompt or Enter to keep: ")
                 if new_prompt: p['prompt'] = new_prompt
+
+                current_ref = p.get('refinement_enabled')
+                ref_label = "Use global setting" if current_ref is None else ("✅ Yes" if current_ref else "❌ No")
+                print(f"\nRefinement: {ref_label}")
+                ref_input = input("Set refinement (y=yes / n=no / Enter=global): ").lower()
+                if ref_input == 'y':
+                    p['refinement_enabled'] = True
+                elif ref_input == 'n':
+                    p['refinement_enabled'] = False
+                elif ref_input == '':
+                    p.pop('refinement_enabled', None)
                 
                 save_config(config)
                 print("\nProfile updated!")

@@ -69,6 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('stt-model-select').value = config.stt_model;
         document.getElementById('refinement-model-select').value = config.refinement_model;
         document.getElementById('refinement-toggle').checked = config.refinement_enabled;
+        const tempSlider = document.getElementById('temperature-slider');
+        const tempValue = document.getElementById('temp-value');
+        const temp = config.temperature || 0.7;
+        tempSlider.value = temp;
+        tempValue.textContent = temp;
+        tempSlider.addEventListener('input', (e) => {
+            tempValue.textContent = e.target.value;
+        });
     }
 
     saveSettingsBtn.addEventListener('click', async () => {
@@ -76,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newConfig.stt_model = document.getElementById('stt-model-select').value;
         newConfig.refinement_model = document.getElementById('refinement-model-select').value;
         newConfig.refinement_enabled = document.getElementById('refinement-toggle').checked;
+        newConfig.temperature = parseFloat(document.getElementById('temperature-slider').value);
 
         await fetch('/api/config', {
             method: 'POST',

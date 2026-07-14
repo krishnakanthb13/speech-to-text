@@ -3,6 +3,7 @@
     "debug_keys": false,
     "log_history": true,
     "play_sounds": true,
+    "temperature": 0.7,
     "profiles": [
         {
             "hotkey": [
@@ -47,7 +48,8 @@
                 "5"
             ],
             "name": "Simple",
-            "prompt": "Rewrite this speech in plain, simple English. Remove jargon and make it easy for a non-expert to understand. Return only the simplified text."
+            "prompt": "Rewrite this speech in plain, simple English. Remove jargon and make it easy for a non-expert to understand. Return only the simplified text.",
+            "refinement_enabled": false
         },
         {
             "hotkey": [

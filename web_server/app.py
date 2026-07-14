@@ -146,9 +146,13 @@ def upload_audio():
     # 2. Refine
     refined_text = raw_text
     profile = next((p for p in config.get('profiles', []) if p.get('name') == profile_name), None)
-    
-    if config.get('refinement_enabled', True):
+
+    profile_refinement = profile.get('refinement_enabled') if profile else None
+    refinement_on = profile_refinement if profile_refinement is not None else config.get('refinement_enabled', True)
+
+    if refinement_on:
         prompt = profile['prompt'] if profile else "Clean up this text."
+        temperature = config.get('temperature', 0.7)
         
         # Parse Chat Params
         chat_params_json = request.form.get('chatParams')
@@ -210,7 +214,8 @@ def upload_audio():
                 messages=[
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": raw_text}
-                ]
+                ],
+                temperature=temperature
             )
             refined_text = completion.choices[0].message.content.strip()
         except Exception as e:

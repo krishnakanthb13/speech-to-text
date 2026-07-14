@@ -1,3 +1,5 @@
+__version__ = "0.1.15"
+
 import os
 import sys
 import time
@@ -5,6 +7,7 @@ import queue
 import threading
 import json
 import math
+import argparse
 import numpy as np
 import sounddevice as sd
 from groq import Groq
@@ -452,11 +455,15 @@ class GroqSTT:
     def refine_text(self, text):
         if not self.config['refinement_enabled']: return text
         prompt = self.active_profile['prompt'] if self.active_profile else "Refine text."
+        profile_refinement = self.active_profile.get('refinement_enabled') if self.active_profile else None
+        if profile_refinement is not None and not profile_refinement:
+            return text
         try:
             def call_refinement():
                 return self.client.chat.completions.create(
                     model=self.config['refinement_model'],
-                    messages=[{"role": "system", "content": prompt}, {"role": "user", "content": text}]
+                    messages=[{"role": "system", "content": prompt}, {"role": "user", "content": text}],
+                    temperature=self.config.get('temperature', 0.7)
                 )
             res = self.groq_request_with_retry(call_refinement)
             return res.choices[0].message.content.strip()
@@ -572,6 +579,10 @@ class GroqSTT:
         self.active_profile = None
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Handy Groq Speech-to-Text")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    args = parser.parse_args()
+
     # 1. Initialize UI (Main Thread Owner)
     indicator = RecordingIndicator()
     
