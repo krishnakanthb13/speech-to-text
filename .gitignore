@@ -39,3 +39,6 @@ temp_recording.wav
 # OS
 .DS_Store
 Thumbs.db
+
+# Mimo
+.mimocode/

@@ -1,5 +1,7 @@
 import os
+import sys
 import json
+import uuid
 import shutil
 import tempfile
 from datetime import datetime
@@ -9,6 +11,10 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from groq import Groq
 from dotenv import load_dotenv
+
+# Add parent dir to path for config_utils import
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config_utils
 
 # Setup paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,6 +28,7 @@ load_dotenv(ENV_PATH)
 
 app = Flask(__name__)
 CORS(app)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload
 
 # Initialize Flask-Limiter with file-based storage
 limiter = Limiter(
@@ -37,16 +44,6 @@ if not api_key:
     print("WARNING: GROQ_API_KEY not found.")
 client = Groq(api_key=api_key)
 
-def load_config():
-    if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, "r") as f:
-            return json.load(f)
-    return {}
-
-def save_config(config):
-    with open(CONFIG_PATH, "w") as f:
-        json.dump(config, f, indent=4)
-
 def append_history(entry):
     # Matches the logging format of main.py
     # RotatingFileHandler in main.py writes plain messages, usually with a newline if configured standardly.
@@ -57,6 +54,18 @@ def append_history(entry):
     except Exception as e:
         print(f"Error writing history: {e}")
 
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return jsonify({"error": "File too large. Maximum upload size is 50MB."}), 413
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Resource not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({"error": "Internal server error"}), 500
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -65,9 +74,9 @@ def index():
 def handle_config():
     if request.method == 'POST':
         new_config = request.json
-        save_config(new_config)
+        config_utils.save_config(new_config)
         return jsonify({"status": "success", "config": new_config})
-    return jsonify(load_config())
+    return jsonify(config_utils.load_config())
 
 @app.route('/api/history', methods=['GET'])
 def get_history():
@@ -115,16 +124,14 @@ def upload_audio():
     audio_file = request.files['audio']
     profile_name = request.form.get('profile', 'General')
     
-    # Save temp
-    temp_filename = os.path.join(BASE_DIR, "temp_upload.webm") # Browser usually sends webm
-    audio_file.save(temp_filename)
+    temp_filename = os.path.join(BASE_DIR, f"temp_upload_{uuid.uuid4().hex}.webm")
     
-    config = load_config()
-    file_path_to_send = temp_filename
-    
-    # 1. Transcribe
     try:
-        with open(file_path_to_send, "rb") as file:
+        audio_file.save(temp_filename)
+        config = config_utils.load_config()
+        
+        # 1. Transcribe
+        with open(temp_filename, "rb") as file:
             transcription = client.audio.transcriptions.create(
                 file=(temp_filename, file.read()),
                 model=config.get('stt_model', 'whisper-large-v3')
@@ -138,7 +145,7 @@ def upload_audio():
 
     # 2. Refine
     refined_text = raw_text
-    profile = next((p for p in config['profiles'] if p['name'] == profile_name), None)
+    profile = next((p for p in config.get('profiles', []) if p.get('name') == profile_name), None)
     
     if config.get('refinement_enabled', True):
         prompt = profile['prompt'] if profile else "Clean up this text."

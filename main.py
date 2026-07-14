@@ -37,6 +37,8 @@ import winsound
 from datetime import datetime
 import pystray
 import settings_manager
+import config_utils
+import functools
 
 # Load environment variables
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -51,7 +53,8 @@ log_handler = RotatingFileHandler("history.log", maxBytes=5*1024*1024, backupCou
 log_handler.setFormatter(log_formatter)
 logger = logging.getLogger("HandyGroq")
 logger.setLevel(logging.INFO)
-logger.addHandler(log_handler)
+if not logger.handlers:
+    logger.addHandler(log_handler)
 
 class RecordingIndicator:
     def __init__(self):
@@ -82,7 +85,7 @@ class RecordingIndicator:
     def _thread_safe(self, func, *args, **kwargs):
         """Marshal UI calls to the main thread."""
         if self.root:
-            self.root.after(0, lambda: func(*args, **kwargs))
+            self.root.after(0, functools.partial(func, *args, **kwargs))
 
     def show(self, text="Listening...", state="recording"):
         self._thread_safe(self._show_impl, text, state)
@@ -103,7 +106,7 @@ class RecordingIndicator:
         # after_cancel is tricky if ID is stale, but usually safe to ignore errors
         if self.animation_id:
             try: self.root.after_cancel(self.animation_id)
-            except: pass
+            except Exception: pass
             self.animation_id = None
         self.root.withdraw()
         self.visible = False
@@ -183,10 +186,10 @@ class RecordingIndicator:
                 img_w, img_h = 600, 100
                 img = Image.new('RGBA', (img_w, img_h), (0, 0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                try: 
+                try:
                     emoji_font = ImageFont.truetype("seguiemj.ttf", 48)
                     text_font = ImageFont.truetype("seguisb.ttf", 40)
-                except: 
+                except Exception:
                     emoji_font = text_font = ImageFont.load_default()
                 
                 draw.text((15, img_h//2), emoji, font=emoji_font, fill=color, anchor="lm", embedded_color=True)
@@ -319,8 +322,7 @@ class GroqSTT:
         self.tray_thread.start()
 
     def save_config(self):
-        with open("config.json", "w") as f:
-            json.dump(self.config, f, indent=4)
+        config_utils.save_config(self.config)
 
     def stop_app(self):
         print("\nStopping application...")
@@ -347,12 +349,14 @@ class GroqSTT:
         print("=" * 50 + "\n")
 
     def load_config(self):
-        config_path = "config.json"
-        with open(config_path, "r") as f:
-            self.config = json.load(f)
+        self.config = config_utils.load_config()
+        ok, errors = config_utils.validate_config(self.config)
+        if not ok:
+            for e in errors:
+                print(f"[!] Config warning: {e}")
         
-        for profile in self.config['profiles']:
-            profile['key_names'] = [k.lower().strip() for k in profile['hotkey']]
+        for profile in self.config.get('profiles', []):
+            profile['key_names'] = [k.lower().strip() for k in profile.get('hotkey', [])]
         self.debug_keys = self.config.get("debug_keys", False)
 
     def play_sound(self, sound_type):

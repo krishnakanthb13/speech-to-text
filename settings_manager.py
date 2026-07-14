@@ -3,6 +3,7 @@ import os
 import time
 import sys
 from pynput.keyboard import Key, KeyCode
+import config_utils
 
 try:
     import winreg
@@ -59,12 +60,10 @@ def set_autostart(enable=True):
         print(f"Error setting autostart: {e}")
 
 def load_config():
-    with open(CONFIG_PATH, "r") as f:
-        return json.load(f)
+    return config_utils.load_config()
 
 def save_config(config):
-    with open(CONFIG_PATH, "w") as f:
-        json.dump(config, f, indent=4)
+    config_utils.save_config(config)
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
