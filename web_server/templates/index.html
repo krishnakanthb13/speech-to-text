@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <link rel="stylesheet" href="/static/css/style.css?v=14">
+    <link rel="stylesheet" href="/static/css/style.css?v=15">
 </head>
 
 <body>
@@ -18,6 +18,8 @@
         <header>
             <h1><i class="fa-solid fa-microphone-lines"></i> Handy Groq</h1>
             <div class="header-controls">
+                <button id="theme-toggle" class="icon-btn" title="Toggle Theme"><i
+                        class="fa-solid fa-circle-half-stroke"></i></button>
                 <button id="chat-params-btn" class="icon-btn" title="AI Personality"><i
                         class="fa-solid fa-wand-magic-sparkles"></i></button>
                 <button id="history-btn" class="icon-btn" title="History"><i
@@ -58,6 +60,7 @@
                     </button>
                     <div class="pulse-ring"></div>
                     <div class="status-text" id="status-text">Ready to Record</div>
+                    <div class="spacebar-hint">Press <kbd>Space</kbd> to record</div>
                 </div>
             </div>
         </main>
@@ -72,6 +75,9 @@
                 <div class="modal-header">
                     <h2>History</h2>
                     <button class="close-modal close-history"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="history-search-container">
+                    <input type="text" id="history-search" class="history-search-input" placeholder="Search history...">
                 </div>
                 <div class="modal-body history-body">
                     <div id="history-list" class="history-list">
@@ -200,7 +206,7 @@
                 </div>
             </div>
         </div>
-        <script src="/static/js/main.js?v=13"></script>
+        <script src="/static/js/main.js?v=15"></script>
 </body>
 
 </html>

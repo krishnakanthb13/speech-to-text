@@ -1,4 +1,4 @@
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 import os
 import sys
@@ -69,6 +69,8 @@ class RecordingIndicator:
         self.animation_id = None
         self.dot_pulse = 0
         self.emoji_cache = {}
+        self.recording_start_time = None
+        self.timer_id = None
         
         if TK_AVAILABLE:
             try:
@@ -99,6 +101,9 @@ class RecordingIndicator:
         self.root.deiconify()
         self.visible = True
         self._pulse()
+        if state == "recording":
+            self.recording_start_time = time.time()
+            self._tick_timer()
 
     def hide(self):
         self._thread_safe(self._hide_impl)
@@ -106,13 +111,27 @@ class RecordingIndicator:
     def _hide_impl(self):
         if not self.root: return
         self.state = "idle"
-        # after_cancel is tricky if ID is stale, but usually safe to ignore errors
         if self.animation_id:
             try: self.root.after_cancel(self.animation_id)
             except Exception: pass
             self.animation_id = None
+        if self.timer_id:
+            try: self.root.after_cancel(self.timer_id)
+            except Exception: pass
+            self.timer_id = None
+        self.recording_start_time = None
         self.root.withdraw()
         self.visible = False
+
+    def _tick_timer(self):
+        if not self.visible or self.state != "recording" or not self.recording_start_time:
+            return
+        elapsed = time.time() - self.recording_start_time
+        profile_name = ""
+        if hasattr(self, '_last_profile_name'):
+            profile_name = self._last_profile_name
+        self._update_state("recording", profile_name, elapsed)
+        self.timer_id = self.root.after(100, self._tick_timer)
 
     def update_text(self, text, state=None):
         self._thread_safe(self._update_text_impl, text, state)
@@ -165,21 +184,26 @@ class RecordingIndicator:
             fill="white", outline=""
         )
 
-    def _update_state(self, state, profile_name=None):
+    def _update_state(self, state, profile_name=None, elapsed=None):
         self.state = state
+        if profile_name and state == "recording":
+            self._last_profile_name = profile_name
         if not getattr(self, 'canvas', None): return
-        
+
         states = {
             "recording": ("🎙", "Listening", "#ff4444"),
             "processing": ("🤖", "Processing...", "#ffbb00"),
             "typing": ("✅", "Done...", "#00cc00")
         }
         emoji, text, color = states.get(state, ("?", "...", "white"))
-        
+
         if state == "recording" and profile_name:
             formatted_profile = profile_name.strip().capitalize()
             if formatted_profile != "Listening":
-                text = f"Listening ({formatted_profile})"
+                if elapsed is not None:
+                    text = f"Listening ({formatted_profile}) {elapsed:.1f}s"
+                else:
+                    text = f"Listening ({formatted_profile})"
             else:
                 text = "Listening..."
 

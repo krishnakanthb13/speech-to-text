@@ -21,6 +21,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let mediaRecorder = null;
     let audioChunks = [];
     let config = null;
+    let allHistoryItems = [];
+
+    // Theme
+    const themeToggle = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            if (current === 'light') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    }
 
     // 1. Initial Load
     fetchConfig();
@@ -120,6 +139,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') {
             toggleModal(settingsModal, false);
             toggleModal(historyModal, false);
+            toggleModal(chatParamsModal, false);
+        }
+
+        // Space bar to start/stop recording (only when no modal is open and not typing in an input)
+        if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            const anyModalOpen = !settingsModal.classList.contains('hidden') ||
+                                 !historyModal.classList.contains('hidden') ||
+                                 !chatParamsModal.classList.contains('hidden');
+            if (!anyModalOpen) {
+                e.preventDefault();
+                if (!isRecording) {
+                    startRecording();
+                } else {
+                    stopRecording();
+                }
+            }
         }
 
         // Ctrl+C to close (User Request), but ONLY if no text is selected
@@ -130,12 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!selection || selection.toString().length === 0) {
                 // Check which modal is open and close it
                 if (!settingsModal.classList.contains('hidden')) {
-                    e.preventDefault(); // Prevent copy sound/action if empty
+                    e.preventDefault();
                     toggleModal(settingsModal, false);
                 }
                 if (!historyModal.classList.contains('hidden')) {
                     e.preventDefault();
                     toggleModal(historyModal, false);
+                }
+                if (!chatParamsModal.classList.contains('hidden')) {
+                    e.preventDefault();
+                    toggleModal(chatParamsModal, false);
                 }
             }
         }
@@ -406,30 +445,52 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/api/history');
             const history = await res.json();
-            historyList.innerHTML = '';
-
-            if (history.length === 0) {
-                historyList.innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.7;">
-                        <i class="fa-solid fa-ghost" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-                        <p style="font-style: italic;">It's ghost-town quiet in here... 👻<br>Start yapping to scare them away!</p>
-                    </div>
-                `;
-            } else {
-                history.forEach(item => addHistoryItem(item, false));
-            }
+            allHistoryItems = history;
+            renderHistory(history);
 
             // Restore last transcription from history on load
             if (history.length > 0) {
-                const latest = history[0]; // API returns newest first
+                const latest = history[0];
                 const text = latest.refined_text || latest.raw_text;
                 const display = document.getElementById('last-text-display');
                 if (display) display.textContent = text;
             }
         } catch (err) {
             console.error("Failed to fetch history:", err);
-            historyList.innerHTML = '<div style="padding:1rem; text-align:center;">Could not load history 😓</div>';
+            historyList.innerHTML = '<div style="padding:1rem; text-align:center;">Could not load history</div>';
         }
+    }
+
+    function renderHistory(items) {
+        historyList.innerHTML = '';
+        if (items.length === 0) {
+            historyList.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.7;">
+                    <i class="fa-solid fa-ghost" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+                    <p style="font-style: italic;">It's ghost-town quiet in here...<br>Start yapping to scare them away!</p>
+                </div>
+            `;
+        } else {
+            items.forEach(item => addHistoryItem(item, false));
+        }
+    }
+
+    // History Search
+    const historySearch = document.getElementById('history-search');
+    if (historySearch) {
+        historySearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (!query) {
+                renderHistory(allHistoryItems);
+                return;
+            }
+            const filtered = allHistoryItems.filter(item =>
+                (item.refined_text || '').toLowerCase().includes(query) ||
+                (item.raw_text || '').toLowerCase().includes(query) ||
+                (item.profile || '').toLowerCase().includes(query)
+            );
+            renderHistory(filtered);
+        });
     }
 
     function addHistoryItem(item, prepend) {
@@ -497,6 +558,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     div.style.opacity = '0';
                     div.style.transform = 'translateX(20px)';
                     setTimeout(() => div.remove(), 300);
+                    // Update cache to prevent item reappearing in search
+                    allHistoryItems = allHistoryItems.filter(h => h.timestamp !== item.timestamp);
                 } else {
                     alert('Error deleting item: ' + (data.error || 'Unknown error'));
                 }
