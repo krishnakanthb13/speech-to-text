@@ -26,9 +26,9 @@ The application operates as a persistent background service. It uses a **Main-Th
 
 | Component | Description |
 | :--- | :--- |
-| `RecordingIndicator` | A custom Tkinter-based floating pill. Runs on the **Main Thread**. Updates from background threads are marshaled via `root.after`. |
+| `RecordingIndicator` | A custom Tkinter-based floating pill. Runs on the **Main Thread**. Updates from background threads are marshaled via `root.after`. Dynamically displays elapsed recording duration in seconds during recording. |
 | `SystemTray` | Powered by `pystray`. Provides background persistence and quick-access settings via the taskbar. |
-| `GroqSTT` | The logic controller. Manages recording state and coordinates between `pynput`, `sounddevice`, and the Groq API. |
+| `GroqSTT` | The logic controller. Manages recording state and coordinates between `pynput`, `sounddevice`, and the Groq API. Supports `--version` flag at startup. |
 | `pynput.keyboard` | Monitors global hotkeys. Runs in a dedicated background thread. |
 | `RotatingFileHandler` | Ensures `history.log` stays within a 5MB limit with automatic backups. |
 
@@ -52,18 +52,25 @@ The project now includes a complementary Web Server for managing history and mob
 - **Shared State**: Reads and writes to the same `config.json` and `history.log` as the desktop app.
 
 ### Web Server Logic (`app.py`)
-- **Aggressive Prompt Injection**: The backend now employs an "Aggressive Mode" for personality parameters. If a user deviates from defaults (40-60 range), the system **overrides** the base prompt with rigid directives (e.g., "You are a ROBOT", "Be ANGRY"), ensuring the LLM radically transforms the text style rather than just refining it.
+- **Configurable LLM Temperature**: The backend reads the custom `temperature` value (0.0 to 2.0) from the configuration (defaulting to 0.7) and applies it to the Groq Chat Completions API.
+- **Per-Profile Refinement**: The server respects profile-level refinement overrides (i.e. `refinement_enabled` in a specific profile overrides the global refinement flag).
+- **Aggressive Prompt Injection**: The backend employs an "Aggressive Mode" for personality parameters. If a user deviates from defaults (40-60 range), the system **overrides** the base prompt with rigid directives (e.g., "You are a ROBOT", "Be ANGRY"), ensuring the LLM radically transforms the text style rather than just refining it.
 - **Parameter Validation**: All personality parameters are strictly validated—only allowed keys (`humanRobot`, `factCreative`, `funnyRage`, `expertLame`, `formalSlang`) are accepted, and values must be numbers between 0-100. Invalid requests return a 400 error.
 - **Rate Limiting**: Flask-Limiter enforces a global limit of 15 requests per minute using IP-based tracking via `get_remote_address`.
 - **Atomic History Deletion**: History deletion uses `tempfile.mkstemp()` and `shutil.move()` for crash-safe atomic writes, preventing corrupted history files.
 - **Debug Logging**: Explicit `print` statements track the received `chatParams` and the final generated prompt for easy terminal debugging.
 
 ### Frontend Logic (`main.js`)
+- **Theme Toggle**: Features a Light/Dark Theme toggle that updates standard page colors dynamically and saves user preference via `localStorage`.
+- **Spacebar Recording Shortcut**: Pressing the `Space` key when no inputs or modals are focused starts/stops the microphone recording dynamically.
+- **Escape / Ctrl+C Modals Control**: Active modals can be dismissed by pressing `Escape` or `Ctrl+C` (when no text selection exists).
+- **History Search**: Real-time filtering of log entries via the search input, dynamically matching on raw/refined text and profile names over cached items (`allHistoryItems`).
 - **Auto-Clipboard**: Successful transcriptions are immediately written to the `navigator.clipboard` API.
 - **Direct Feedback**: Replaced complex toast notifications with a simple, high-visibility status updates (e.g., "Done! (Ctrl+V to paste)") that persist for 4 seconds.
 - **Personality Persistence**: AI personality sliders are saved to `localStorage` on every change (slider, preset, reset). Values are validated on load—non-numbers or out-of-range values fall back to defaults.
 - **Personality Indicator**: The AI Personality button gains an orange glow and border when any slider is outside the 40-60 default range, updating in real time.
 - **History Management**:
+  - **Local Cache Update**: Modifying or deleting a history item updates the cached elements in JavaScript, preventing deleted items from reappearing during searches.
   - **Custom Badges**: Parses stored `chat_params` to dynamically append a "🎭 Custom" badge to history items.
   - **Empty States**: Displays a playful "Ghost" empty state when no history is found.
   - **Error Handling**: Gracefully handles network failures during fetch/delete operations.

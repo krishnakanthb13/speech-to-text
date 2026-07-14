@@ -44,6 +44,12 @@ User data must never be corrupted. History deletion uses **atomic file operation
 ### 12. Rate Limiting & Abuse Prevention
 Public-facing endpoints are protected by **rate limiting** to prevent accidental infinite loops or malicious abuse. We use IP-based tracking to enforce fair usage limits (15 requests/minute) without requiring authentication.
 
+### 13. Flexible Hierarchy
+We prioritize user choice at the closest possible scope. Configuration options (like `refinement_enabled` toggle) can be set globally or overridden per-profile, enabling granular flexibility (e.g. skipping AI processing for simple notes while keeping it on for complex drafts) without duplicating entire configuration objects.
+
+### 14. Personalization & Keyboard-First Accessibility
+The interface adapts to the user's workspace preferences and physical controls. A built-in Light/Dark mode toggle persists layout styling to suit different working conditions. The web client implements robust keyboard shortcuts (Spacebar recording triggers, Escape and Ctrl+C modal dismissals) to reduce mouse movements and improve overall efficiency.
+
 
 ## Trade-offs & Constraints
 - **Connectivity**: Requires an active internet connection to communicate with Groq.

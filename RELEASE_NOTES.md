@@ -1,5 +1,28 @@
 # 🚀 Release Notes - Handy-Groq STT
 
+# 🚀 **v0.1.16 — Versioning, Accessibility & Web UX Overhaul**
+
+This release focuses on **user accessibility, control, and developer ergonomics**. We've introduced a centralized config helper, custom API parameters (temperature), granular profile settings, and a fully polished, accessible Web UI.
+
+### 🚀 New Features
+- 🌗 **Light/Dark Theme Toggle (Web)**: Switch between dark glassmorphism and a clean, high-contrast light mode. Your choice is saved locally and loaded automatically on startup.
+- ⏱️ **Live Duration Timer**: The desktop floating widget now displays real-time recording duration (e.g. `Listening (General) 2.4s`) to help you keep track of long recordings.
+- 🔍 **History Search**: Real-time filtering of transcription history in the Web UI. Search by profile name, raw text, or refined text with high-performance client-side query matching.
+- ⌨️ **Keyboard Accessibility Shortcuts**:
+  * Press **`Space`** (when no input is focused) to instantly start/stop voice recording.
+  * Dismiss open modals cleanly using the **`Escape`** key or **`Ctrl + C`** (only if no text is selected).
+- 🌡️ **Temperature Slider**: Control output creativity/determinism (range `0.0`–`2.0`, defaulting to `0.7`) via CLI, Web UI slider, or `config.json`.
+- ⚙️ **Per-Profile Refinement Toggle**: Toggle AI refinement (`refinement_enabled`) per profile, overriding the global setting. Enable/disable individually (e.g., the Simple profile skips LLM refinement by default).
+- ℹ️ **Version Flag**: Check the running software version instantly using `python main.py --version`.
+
+### ⚡ Improvements & Hardening
+- 📁 **Centralized Configuration Manager**: Extracted all config operations into `config_utils.py`, providing atomic writes, automatic `.bak` backups, and JSONDecodeError auto-recovery.
+- 🛡️ **Defensive State Handling**: Prevents `KeyError` crashes in both desktop and web backends if `config.json` is missing or empty, gracefully reverting to defaults.
+- 🧹 **Port Cleanup**: Web launcher scripts automatically find and kill lingering zombie processes running on port `8091` to avoid startup bind errors.
+- 🗑️ **Atomic History Search & Delete Sync**: Deleting items in the history modal updates the active memory cache (`allHistoryItems`), ensuring deleted items never reappear when search is activated.
+
+---
+
 # 🚀 **v0.1.12 — Stability, UX & Safety**
 
 **AI personality persistence:** Personality sliders are now saved to `localStorage` and automatically restored on page load. Values are written whenever a slider changes, a preset is applied, or reset is clicked. Stored values are validated to ensure they are numbers between 0 and 100, and invalid or corrupted data safely falls back to defaults.

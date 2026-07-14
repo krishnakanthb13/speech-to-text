@@ -1,5 +1,63 @@
 # 🚀 Product Launch Announcements - Handy-Groq STT
 
+## 👔 LinkedIn (v0.1.16 Update)
+**Title: Accessibility, Granular Control & centralizing config: Handy-Groq STT v0.1.16 🎙️**
+
+We just pushed the **v0.1.16** update to **Handy-Groq STT**—our local push-to-talk speech-to-text application with context-aware AI refinement. 
+
+This release focuses on giving users complete control over how the AI processes their speech, and making the Web UI highly accessible.
+
+**What's New:**
+🌗 **Light/Dark Mode Toggle**: A fully responsive Light Mode style for those who prefer high-contrast, daytime themes.
+🌡️ **Temperature Slider**: Control the LLM temperature (0.0 to 2.0) directly from the Web UI or CLI. Fine-tune between raw, deterministic correction (low temp) and creative rewriting (high temp).
+⚙️ **Per-Profile AI Refinement**: You can now toggle refinement at the profile level. The "Simple" profile now skips AI processing entirely, while other profiles keep it active.
+⏱️ **Live Elapsed Timer**: The desktop widget now shows the exact duration of your recording in real-time, helping you track length.
+🔍 **History Search**: Search through past transcripts instantly by profile, raw text, or refined text.
+⌨️ **Keyboard Navigation**: Press spacebar to start/stop dictation; use Escape or Ctrl+C to close modals.
+
+Behind the scenes, we refactored the backend settings into a centralized `config_utils.py` module with atomic writes and automatic `.bak` recovery to prevent config corruption.
+
+Check out the release: [github.com/krishnakanthb13/speech-to-text](https://github.com/krishnakanthb13/speech-to-text)
+
+#AI #SpeechToText #OpenSource #Productivity #DeveloperTools #Whisper #Llama
+
+---
+
+## 🐦 X / Twitter (v0.1.16 Update)
+🌗 Theme support & real-time search! Handy-Groq STT v0.1.16 is out!
+
+🎙️ Live elapsed timer on the Tkinter widget
+🌡️ LLM temperature slider (0.0 - 2.0)
+⚙️ Per-profile refinement toggles (skip AI on simple notes)
+⌨️ Keyboard shortcuts: Spacebar to record, Esc to close modals
+
+Check it out: [github.com/krishnakanthb13/speech-to-text] #BuildInPublic #OpenSource #AI
+
+---
+
+## 🤝 Reddit (v0.1.16 Update - r/webdev / r/SideProject / r/selfhosted)
+**Title: [Showcase] I added Light/Dark theme support, a live recording timer, and per-profile AI temperature sliders to my open-source push-to-talk STT tool**
+
+Hey guys! I recently updated **Handy-Groq STT** to **v0.1.16**.
+
+For those unfamiliar, it's a lightweight desktop widget (Tkinter) and localhost Web UI (Flask + Waitress) that acts as a global voice-to-text assistant. Hold a hotkey (or press spacebar in the web view), talk, and it instantly transcribes and types refined text into any active app using Groq (Whisper-large-v3 + Llama-3.3).
+
+**New features in v0.1.16:**
+*   **🌗 Web UI Light Theme**: Added full light/dark glassmorphism theme support with persistence in `localStorage`.
+*   **⏱️ Live Duration Counter**: The Tkinter floating indicator widget now updates every 100ms to show the exact duration of the ongoing recording.
+*   **🌡️ Temperature Slider**: Exposed temperature parameters (0.0 to 2.0) to configure LLM creativity.
+*   **⚙️ Granular Profile Refinement**: Toggles can override global settings per-profile (so "Simple mode" skips AI refinement entirely).
+*   **🔍 History Search**: Fully reactive search filter on the frontend cache.
+
+**Technical Refactoring:**
+To support safe multi-process reads/writes (desktop GUI, CLI settings, and Flask server), I centralized settings into an atomic, transactional file manager (`config_utils.py`) that uses `fsync` and `.bak` rollback procedures if a crash occurs mid-write.
+
+Repo link: [github.com/krishnakanthb13/speech-to-text](https://github.com/krishnakanthb13/speech-to-text)
+
+I'd love to hear your thoughts on custom prompts and profiles!
+
+---
+
 ## 👔 LinkedIn (v0.1.10 Update)
 **Title: Getting Aggressive with AI Expressions: Handy-Groq v0.1.10 🎭**
 

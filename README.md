@@ -2,9 +2,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![Handy-Groq STT](./assets/release_v0.1.0.png)
-
-![Handy-Groq STT](./assets/release_v0.0.10.png)
+![Handy-Groq STT](./assets/release_v0.1.16.png)
 
 **Handy-Groq: Press, speak, and watch your thoughts turn into perfectly refined text in any application.**
 
@@ -17,7 +15,11 @@ A high-performance, context-aware AI voice assistant that transcribes and auto-t
 ## ✨ Features
 
 - 🚀 **Extreme Speed**: Powered by Groq's Whisper-large-v3-turbo.
-- 🌐 **Modern Web UI**: A beautiful, glassmorphism-styled web interface for recording and management.
+- 🌐 **Modern Web UI**: A beautiful, glassmorphism-styled web interface for recording and management. Now features a **Light/Dark Theme Toggle** 🌗, **History Search** 🔍, and **Spacebar Shortcut** ⌨️ to start/stop recording.
+- ⏱️ **Live Elapsed Timer**: The floating widget displays elapsed recording duration in seconds (Desktop).
+- 🌡️ **Temperature Control**: Configure LLM temperature (0.0 to 2.0) via CLI, Web UI slider, or `config.json` (defaults to 0.7) to adjust creativity.
+- ⚙️ **Per-Profile Refinement**: Enable or disable AI refinement on a per-profile level, overriding the global setting (e.g., the Simple profile skips refinement by default).
+- ℹ️ **Version Tracking**: Check version easily using `python main.py --version`.
 - 📜 **Enhanced History**: View, Copy, and Delete past transcriptions. Includes **Custom Personality Badges** 🎭 and intelligent empty states 👻.
 - 🧠 **Context-Aware Refinement**: Optional AI layer to fix grammar, punctuation, and "ums/ahs".
 - 🎭 **Aggressive AI Personalities**: A powerful engine that completely transforms your text style. From "Robotic Log Files" to "Gen-Z Slang" or "Rage Rants" – the AI doesn't just tweak, it rewrites.
